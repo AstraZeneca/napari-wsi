@@ -2,7 +2,7 @@
 
 ![Maturity level-1](https://img.shields.io/badge/Maturity%20Level-ML--1-yellow)
 
-A plugin to read whole slide images within [napari]
+A plugin to read whole slide images within [napari].
 
 ---
 

@@ -1,0 +1,17 @@
+name: napari-wsi
+display_name: WSI Reader
+contributions:
+  commands:
+    - id: napari-wsi.get_wsi_reader
+      python_name: napari_wsi.reader:get_wsi_reader
+      title: A reader for whole slide image data.
+    - id: napari-wsi.get_wsi_reader_widget
+      python_name: napari_wsi.widget:get_wsi_reader_widget
+      title: A widget for reading whole slide image data.
+  readers:
+    - command: napari-wsi.get_wsi_reader
+      accepts_directories: false
+      filename_patterns: ["*.bif", "*.ndpi", "*.qptiff", "*.scn", "*.svs", "*.tif", "*.tiff"]
+  widgets:
+    - command: napari-wsi.get_wsi_reader_widget
+      display_name: WSI Reader

@@ -24,15 +24,15 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = ">=3.8, <3.11"
-dask = "2022.*"
-imagecodecs = "2022.*"
+dask = ">=2022"
+imagecodecs = ">=2022"
 magicgui = "0.*"
 matplotlib = "3.*"
 napari = "0.4.*"
 numpy = "1.*"
 pydantic = "!=1.10.0" # https://github.com/napari/napari/issues/4995
 rasterio = "1.*"
-tifffile = "2022.*"
+tifffile = ">=2022"
 zarr = "2.*"
 
 [tool.poetry.group.dev.dependencies]

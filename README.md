@@ -1,6 +1,9 @@
 # napari-wsi
 
-![Maturity level-1](https://img.shields.io/badge/Maturity%20Level-ML--1-yellow)
+[![PyPI](https://img.shields.io/pypi/v/napari-wsi.svg?color=green)](https://pypi.org/project/napari-wsi)
+[![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/napari-wsi)](https://napari-hub.org/plugins/napari-wsi)
+[![Tests](https://github.com/AstraZeneca/napari-wsi/actions/workflows/main.yml/badge.svg)](https://github.com/AstraZeneca/napari-wsi/actions)
+![Maturity Level-1](https://img.shields.io/badge/Maturity%20Level-ML--1-yellow)
 
 A plugin to read whole slide images within [napari].
 
@@ -12,6 +15,11 @@ You can install `napari-wsi` via [pip]:
 
 ```bash
 pip install napari-wsi
+```
+
+To install the latest development version, run:
+```bash
+pip install git+https://github.com/AstraZeneca/napari-wsi.git
 ```
 
 # Description

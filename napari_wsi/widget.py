@@ -1,6 +1,6 @@
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 
 from magicgui import magic_factory
 from napari.types import LayerDataTuple
@@ -26,7 +26,7 @@ def get_wsi_reader_widget(
     path: Path,
     backend: WSIReaderBackend = DEFAULT_BACKEND,
     split_rgb: bool = False,
-) -> Optional[List[LayerDataTuple]]:
+) -> List[LayerDataTuple]:
     if not path.is_file():
         raise FileNotFoundError(path)
 
@@ -35,4 +35,4 @@ def get_wsi_reader_widget(
     if backend == WSIReaderBackend.rasterio:
         return read_rasterio(path, split_rgb=split_rgb)
 
-    return None
+    raise ValueError(f"Invalid backend {backend}.")

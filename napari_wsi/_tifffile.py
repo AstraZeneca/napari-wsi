@@ -10,10 +10,11 @@ from .multiscales import read_multiscales_data
 from .util import get_isotropic_resolution
 
 
-def _read_metadata(handle: TiffFile) -> Dict[str, Any]:
+def _read_metadata(handle: TiffFile, series: int) -> Dict[str, Any]:
     metadata: Dict[str, Any] = {}
 
-    tags = handle.pages[0].tags
+    page = handle.series[series].pages[0]
+    tags = page.tags
 
     # Set some basic image metadata.
     metadata["file_path"] = handle.filehandle.path
@@ -21,7 +22,7 @@ def _read_metadata(handle: TiffFile) -> Dict[str, Any]:
 
     # Collect additional metadata.
     if handle.is_svs:
-        svs_metadata = svs_description_metadata(handle.pages[0].description)
+        svs_metadata = svs_description_metadata(page.description)
         if "MPP" in svs_metadata:
             metadata["resolution"] = float(svs_metadata["MPP"]) * 1e-6
     else:
@@ -41,12 +42,13 @@ def _read_metadata(handle: TiffFile) -> Dict[str, Any]:
 
 
 def read_tifffile(
-    path: Union[str, Path], *, split_rgb: bool = False
+    path: Union[str, Path], *, series: int = 0, split_rgb: bool = False
 ) -> List[LayerDataTuple]:
     """Read an image using tifffile.
 
     Args:
         path: The path to the image file.
+        series: The image series to read.
         split_rgb: If True, a separate layer will be created for each RGB channel.
 
     Returns:
@@ -55,8 +57,8 @@ def read_tifffile(
     handle = TiffFile(path)
 
     return read_multiscales_data(
-        store=handle.aszarr(),
+        store=handle.aszarr(series=series),
         name=Path(handle.filename).stem,
-        metadata=_read_metadata(handle),
+        metadata=_read_metadata(handle, series=series),
         split_rgb=split_rgb,
     )

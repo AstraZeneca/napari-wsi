@@ -11,8 +11,8 @@ def get_wsi_reader(path: Union[str, Sequence[str]]) -> Optional[Callable]:
 
     handle = TiffFile(path)
 
-    tags = handle.pages[0].tags
-    if "GDAL_METADATA" in tags:
+    page = handle.series[0].pages[0]
+    if "GDAL_METADATA" in page.tags:
         return read_rasterio
 
     return read_tifffile

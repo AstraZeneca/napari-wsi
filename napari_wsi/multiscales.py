@@ -1,6 +1,6 @@
 from abc import ABC
 from dataclasses import dataclass
-from typing import Any, Dict, List, Sequence, Tuple, Union
+from typing import Any, Dict, Iterator, List, Sequence, Tuple, Union
 
 import dask.array as da
 import numpy as np
@@ -65,14 +65,16 @@ class BaseStore(zarr.storage.BaseStore, ABC):
     def dtype(self) -> DTypeLike:
         return self._dtype
 
-    def __iter__(self):
-        return iter(self.keys())
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._store)
 
-    def __len__(self):
-        return sum(1 for _ in self)
+    def __len__(self) -> int:
+        return len(self._store)
 
-    def __contains__(self, key: str):
-        return key in self._store
+    def __contains__(self, key: str) -> bool:
+        if key in self._store:
+            return True
+        return self._contains(key)
 
     def __eq__(self, other):
         raise NotImplementedError
@@ -83,8 +85,8 @@ class BaseStore(zarr.storage.BaseStore, ABC):
     def __delitem__(self, key):
         raise NotImplementedError
 
-    def keys(self):
-        return self._store.keys()
+    def _contains(self, key: str) -> bool:
+        raise NotImplementedError
 
 
 class MultiScalesStore(BaseStore, ABC):
@@ -139,6 +141,21 @@ class MultiScalesStore(BaseStore, ABC):
     @property
     def level_info(self) -> Sequence[LevelInfo]:
         return self._level_info
+
+    def _parse_key(self, key: str) -> Tuple[int, int, Union[int, float]]:
+        level_str, chunk_key = key.split("/")
+        chunk_pos = chunk_key.split(".")
+        x, y = int(chunk_pos[1]), int(chunk_pos[0])
+        level = int(level_str)
+        factor = self.level_info[level].factor
+        return x, y, factor
+
+    def _contains(self, key: str) -> bool:
+        try:
+            self._parse_key(key)
+        except (ValueError, IndexError):
+            return False
+        return True
 
 
 def read_pyramid(store: zarr.storage.StoreLike) -> List[da.Array]:

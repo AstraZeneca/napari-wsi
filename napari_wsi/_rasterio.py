@@ -66,11 +66,7 @@ class RasterioStore(MultiScalesStore):
             return self._store[key]
 
         try:
-            level_str, chunk_key = key.split("/")
-            chunk_pos = chunk_key.split(".")
-            x, y = int(chunk_pos[1]), int(chunk_pos[0])
-            level = int(level_str)
-            factor = self.level_info[level].factor
+            x, y, factor = self._parse_key(key)
             tile = np.transpose(
                 self.handle.read(
                     indexes=list(range(1, self.num_channels + 1)),

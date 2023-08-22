@@ -72,7 +72,9 @@ class BaseStore(zarr.storage.BaseStore, ABC):
         return len(self._store)
 
     def __contains__(self, key: str) -> bool:
-        return key in self._store
+        if key in self._store:
+            return True
+        return self._contains(key)
 
     def __eq__(self, other):
         raise NotImplementedError
@@ -81,6 +83,9 @@ class BaseStore(zarr.storage.BaseStore, ABC):
         raise NotImplementedError
 
     def __delitem__(self, key):
+        raise NotImplementedError
+
+    def _contains(self, key: str) -> bool:
         raise NotImplementedError
 
 
@@ -136,6 +141,21 @@ class MultiScalesStore(BaseStore, ABC):
     @property
     def level_info(self) -> Sequence[LevelInfo]:
         return self._level_info
+
+    def _parse_key(self, key: str) -> Tuple[int, int, Union[int, float]]:
+        level_str, chunk_key = key.split("/")
+        chunk_pos = chunk_key.split(".")
+        x, y = int(chunk_pos[1]), int(chunk_pos[0])
+        level = int(level_str)
+        factor = self.level_info[level].factor
+        return x, y, factor
+
+    def _contains(self, key: str) -> bool:
+        try:
+            self._parse_key(key)
+        except (ValueError, IndexError):
+            return False
+        return True
 
 
 def read_pyramid(store: zarr.storage.StoreLike) -> List[da.Array]:

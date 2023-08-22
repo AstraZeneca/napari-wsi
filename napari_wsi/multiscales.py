@@ -66,10 +66,10 @@ class BaseStore(zarr.storage.BaseStore, ABC):
         return self._dtype
 
     def __iter__(self):
-        return iter(self.keys())
+        return iter(self._store)
 
     def __len__(self):
-        return sum(1 for _ in self)
+        return len(self._store)
 
     def __contains__(self, key: str):
         return key in self._store

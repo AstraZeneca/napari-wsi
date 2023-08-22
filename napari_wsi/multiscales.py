@@ -83,9 +83,6 @@ class BaseStore(zarr.storage.BaseStore, ABC):
     def __delitem__(self, key):
         raise NotImplementedError
 
-    def keys(self):
-        return self._store.keys()
-
 
 class MultiScalesStore(BaseStore, ABC):
     def __init__(

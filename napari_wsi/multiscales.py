@@ -1,6 +1,6 @@
 from abc import ABC
 from dataclasses import dataclass
-from typing import Any, Dict, List, Sequence, Tuple, Union
+from typing import Any, Dict, Iterator, List, Sequence, Tuple, Union
 
 import dask.array as da
 import numpy as np
@@ -65,13 +65,13 @@ class BaseStore(zarr.storage.BaseStore, ABC):
     def dtype(self) -> DTypeLike:
         return self._dtype
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         return iter(self._store)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._store)
 
-    def __contains__(self, key: str):
+    def __contains__(self, key: str) -> bool:
         return key in self._store
 
     def __eq__(self, other):

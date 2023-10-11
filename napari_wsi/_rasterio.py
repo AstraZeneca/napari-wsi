@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, List, Union
+from typing import Any
 
 import numpy as np
 import rasterio
@@ -38,7 +38,7 @@ class RasterioStore(MultiScalesStore):
         def _get_level_size(level) -> Size:
             if level == 0:
                 return Size(height=handle.height, width=handle.width)
-            with rasterio.open(handle.name, overview_level=(level - 1)) as overview:
+            with rasterio.open(handle.name, overview_level=level - 1) as overview:
                 return Size(height=overview.height, width=overview.width)
 
         level_info = [
@@ -95,8 +95,8 @@ class RasterioStore(MultiScalesStore):
         self.handle.close()
 
 
-def _read_metadata(handle: DatasetReader) -> Dict[str, Any]:
-    metadata: Dict[str, Any] = {}
+def _read_metadata(handle: DatasetReader) -> dict[str, Any]:
+    metadata: dict[str, Any] = {}
 
     # Set some basic image metadata.
     metadata["file_path"] = handle.name
@@ -105,9 +105,7 @@ def _read_metadata(handle: DatasetReader) -> Dict[str, Any]:
     return metadata
 
 
-def read_rasterio(
-    path: Union[str, Path], *, split_rgb: bool = False
-) -> List[LayerDataTuple]:
+def read_rasterio(path: str | Path, *, split_rgb: bool = False) -> list[LayerDataTuple]:
     """Read an image using rasterio.
 
     Args:

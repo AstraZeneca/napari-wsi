@@ -1,6 +1,5 @@
 from enum import Enum
 from pathlib import Path
-from typing import List
 
 from magicgui import magic_factory
 from napari.types import LayerDataTuple
@@ -28,7 +27,7 @@ def get_wsi_reader_widget(
     backend: WSIReaderBackend = DEFAULT_BACKEND,
     series: int = 0,
     split_rgb: bool = False,
-) -> List[LayerDataTuple]:
+) -> list[LayerDataTuple]:
     if not path.is_file():
         raise FileNotFoundError(path)
 

@@ -1,6 +1,7 @@
 from abc import ABC
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
-from typing import Any, Dict, Iterator, List, Sequence, Tuple, Union
+from typing import Any
 
 import dask.array as da
 import numpy as np
@@ -14,7 +15,7 @@ from .util import DEFAULT_COLORMAP, Size, as_layer_data_tuple, create_colormaps
 @dataclass(frozen=True)
 class LevelInfo:
     level: int
-    factor: Union[int, float]
+    factor: int | float
     size: Size
 
 
@@ -24,7 +25,7 @@ class BaseStore(zarr.storage.BaseStore, ABC):
         name: str,
         num_channels: int,
         tile_size: Size,
-        scale: Tuple[float, float],
+        scale: tuple[float, float],
         dtype: DTypeLike,
         store: zarr.storage.StoreLike,
     ):
@@ -58,7 +59,7 @@ class BaseStore(zarr.storage.BaseStore, ABC):
         return self._tile_size
 
     @property
-    def scale(self) -> Tuple[float, float]:
+    def scale(self) -> tuple[float, float]:
         return self._scale
 
     @property
@@ -95,7 +96,7 @@ class MultiScalesStore(BaseStore, ABC):
         name: str,
         num_channels: int,
         tile_size: Size,
-        scale: Tuple[float, float],
+        scale: tuple[float, float],
         dtype: DTypeLike,
         level_info: Sequence[LevelInfo],
     ):
@@ -142,7 +143,7 @@ class MultiScalesStore(BaseStore, ABC):
     def level_info(self) -> Sequence[LevelInfo]:
         return self._level_info
 
-    def _parse_key(self, key: str) -> Tuple[int, int, Union[int, float]]:
+    def _parse_key(self, key: str) -> tuple[int, int, int | float]:
         level_str, chunk_key = key.split("/")
         chunk_pos = chunk_key.split(".")
         x, y = int(chunk_pos[1]), int(chunk_pos[0])
@@ -158,7 +159,7 @@ class MultiScalesStore(BaseStore, ABC):
         return True
 
 
-def read_pyramid(store: zarr.storage.StoreLike) -> List[da.Array]:
+def read_pyramid(store: zarr.storage.StoreLike) -> list[da.Array]:
     """Read an image pyramid from a zarr store.
 
     Args:
@@ -192,9 +193,9 @@ def read_multiscales_data(
     store: zarr.storage.StoreLike,
     *,
     name: str,
-    metadata: Dict[str, Any],
+    metadata: dict[str, Any],
     split_rgb: bool = False,
-) -> List[LayerDataTuple]:
+) -> list[LayerDataTuple]:
     """Read (multiscale) image data from a zarr store.
 
     If the image data has three channels, it is assumed to be an RGB image and a single layer data
@@ -223,11 +224,11 @@ def read_multiscales_data(
         raise RuntimeError("Expected only 3D data in pyramid.")
 
     # Convert to channels-last format.
-    channel_axes = set(np.argmin(shape) for shape in shape_per_lev)
+    channel_axes = {np.argmin(shape) for shape in shape_per_lev}
     if len(channel_axes) != 1:
         raise RuntimeError("Different channel axes in pyramid.")
     channel_axis = channel_axes.pop()
-    if len(set(shape[channel_axis] for shape in shape_per_lev)) != 1:
+    if len({shape[channel_axis] for shape in shape_per_lev}) != 1:
         raise RuntimeError("Different number of channels in pyramid.")
     if channel_axis != 2:
         pyramid = [da.moveaxis(pyr_level, channel_axis, -1) for pyr_level in pyramid]

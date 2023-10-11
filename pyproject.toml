@@ -24,28 +24,27 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.8, <3.11"
-dask = ">=2022"
-imagecodecs = ">=2022"
-magicgui = "0.*"
-matplotlib = "3.*"
-napari = "0.4.*"
-numpy = "1.*"
-pydantic = "!=1.10.0" # https://github.com/napari/napari/issues/4995
-rasterio = "1.*"
-tifffile = ">=2022"
-zarr = "2.*"
+python = ">=3.10,<3.12"
+dask = {version = ">=2023", extras = ["array"]}
+imagecodecs = ">=2023.9.18"
+magicgui = ">=0.7.3"
+matplotlib = ">=3.8"
+napari = ">=0.4.18"
+numpy = ">=1.26"
+rasterio = ">=1.3"
+tifffile = ">=2023"
+zarr = ">=2.16"
 
 [tool.poetry.group.dev.dependencies]
-black = "22.3.*"
-invoke = "1.7.*"
-isort = "5.10.*"
-mypy= "==0.990"
-pylint = "2.13.*"
-pytest = "7.2.*"
-pytest-cov = "4.0.*"
+black = "23.9.*"
+invoke = "2.2.*"
+isort = "5.12.*"
+mypy= "1.6.*"
+pylint = "3.0.*"
+pytest = "7.4.*"
+pytest-cov = "4.1.*"
 pytest-qt = "4.2.*"
-scikit-image = "0.*"
+scikit-image = "0.22.*"
 
 [tool.poetry.plugins."napari.manifest"]
 napari-wsi = "napari_wsi:napari.yaml"
@@ -58,13 +57,8 @@ exclude = ["venv"]
 
 [[tool.mypy.overrides]]
 module = [
-    "distributed.*",
-    "invoke.*",
-    "matplotlib.*",
     "napari.*",
     "rasterio.*",
-    "skimage.*",
-    "tifffile.*",
     "zarr.*",
 ]
 ignore_missing_imports = true
@@ -76,4 +70,5 @@ invalid-name,
 missing-docstring,
 too-many-arguments,
 too-many-locals,
+use-dict-literal,
 """

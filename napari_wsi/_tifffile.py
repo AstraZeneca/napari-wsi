@@ -1,19 +1,20 @@
 from pathlib import Path
-from typing import Any, Dict, List, Union
+from typing import Any
 
 import numpy as np
 from napari.types import LayerDataTuple
 from tifffile import TiffFile
-from tifffile.tifffile import svs_description_metadata
+from tifffile.tifffile import TiffPage, svs_description_metadata
 
 from .multiscales import read_multiscales_data
 from .util import get_isotropic_resolution
 
 
-def _read_metadata(handle: TiffFile, series: int) -> Dict[str, Any]:
-    metadata: Dict[str, Any] = {}
+def _read_metadata(handle: TiffFile, series: int) -> dict[str, Any]:
+    metadata: dict[str, Any] = {}
 
     page = handle.series[series].pages[0]
+    assert isinstance(page, TiffPage)
     tags = page.tags
 
     # Set some basic image metadata.
@@ -42,8 +43,8 @@ def _read_metadata(handle: TiffFile, series: int) -> Dict[str, Any]:
 
 
 def read_tifffile(
-    path: Union[str, Path], *, series: int = 0, split_rgb: bool = False
-) -> List[LayerDataTuple]:
+    path: str | Path, *, series: int = 0, split_rgb: bool = False
+) -> list[LayerDataTuple]:
     """Read an image using tifffile.
 
     Args:

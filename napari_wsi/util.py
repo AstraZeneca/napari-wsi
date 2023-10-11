@@ -1,11 +1,13 @@
 import re
 import warnings
+from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from itertools import cycle
-from typing import Any, Dict, Generator, Optional, Sequence, Tuple, Type, Union, cast
+from typing import Any, cast
 
 import matplotlib
+import matplotlib.colors
 import numpy as np
 from napari.types import LayerDataTuple
 from napari.utils import Colormap
@@ -13,7 +15,7 @@ from napari.utils.colormaps import AVAILABLE_COLORMAPS
 
 DEFAULT_COLORMAP = AVAILABLE_COLORMAPS["gray"]
 
-ColorType = Tuple[int, int, int, int]
+ColorType = tuple[int, int, int, int]
 
 
 @dataclass(frozen=True)
@@ -23,7 +25,7 @@ class Size:
 
 
 def as_layer_data_tuple(
-    layer_data: Any, layer_params: Optional[Dict[str, Any]], layer_type: str
+    layer_data: Any, layer_params: dict[str, Any] | None, layer_type: str
 ) -> LayerDataTuple:
     """Create a napari layer data tuple from the given arguments."""
 
@@ -31,7 +33,7 @@ def as_layer_data_tuple(
 
 
 @contextmanager
-def catch_warnings(category: Type[Warning]):
+def catch_warnings(category: type[Warning]):
     with warnings.catch_warnings(record=True) as caught_warnings:
         try:
             yield
@@ -42,7 +44,7 @@ def catch_warnings(category: Type[Warning]):
                 warnings.warn(message=warning.message, category=warning.category)
 
 
-def create_colormap(color: Union[str, int, Sequence[int]], name: str) -> Colormap:
+def create_colormap(color: str | int | Sequence[int], name: str) -> Colormap:
     """Create a napari alpha-blending color map for the given color."""
 
     color_end = np.array(parse_color(color)) / 255
@@ -53,13 +55,17 @@ def create_colormap(color: Union[str, int, Sequence[int]], name: str) -> Colorma
 
 def create_colormaps(
     layer_names: Sequence[str], cmap: str = "tab10"
-) -> Generator[Colormap, None, None]:
+) -> Iterator[Colormap]:
     """Create napari color maps for the given layers."""
 
     if not len(layer_names) == len(set(layer_names)):
         raise RuntimeError("The layer names are not unique.")
 
-    colors = (255 * np.array(matplotlib.colormaps[cmap].colors)).astype(np.uint8)
+    colormap = matplotlib.colormaps[cmap]
+    if not isinstance(colormap, matplotlib.colors.ListedColormap):
+        raise ValueError("The requested colormap must be a ListedColormap.")
+
+    colors = (255 * np.array(colormap.colors)).astype(np.uint8)
     iter_colors = cycle(colors)
     for layer_name in layer_names:
         # pylint: disable-next=stop-iteration-return
@@ -77,7 +83,7 @@ def get_isotropic_resolution(resolution_x: float, resolution_y: float) -> float:
     return np.sqrt(np.abs(resolution_x * resolution_y))
 
 
-def parse_color(color: Union[str, int, Sequence[int]]) -> ColorType:
+def parse_color(color: str | int | Sequence[int]) -> ColorType:
     """Parse the given input as a color, returning an RGBA tuple."""
 
     if isinstance(color, int):

@@ -1,5 +1,5 @@
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, List, Optional, Union
 
 import numpy as np
 import pytest
@@ -38,8 +38,8 @@ class TestCase:
     expected_num_layers: int
     expected_multiscale: bool
     expected_rgb: bool
-    file_path: Optional[Path] = None
-    file_fixture: Optional[str] = None
+    file_path: Path | None = None
+    file_fixture: str | None = None
     split_rgb: bool = False
 
     def get_path(self, request: FixtureRequest) -> Path:
@@ -103,9 +103,9 @@ DEFAULT_TEST_CASES = [
 
 
 def check_image_layers(
-    layers: List[Layer],
-    base_name: Optional[str] = None,
-    viewer: Optional[Viewer] = None,
+    layers: list[Layer],
+    base_name: str | None = None,
+    viewer: Viewer | None = None,
     **kwargs,
 ) -> bool:
     if len(layers) == 1:
@@ -126,9 +126,9 @@ def check_image_layers(
 # pylint: disable-next=too-many-return-statements
 def check_image_layer(
     layer: Layer,
-    name: Optional[str] = None,
-    multiscale: Optional[bool] = None,
-    rgb: Optional[bool] = None,
+    name: str | None = None,
+    multiscale: bool | None = None,
+    rgb: bool | None = None,
 ) -> bool:
     if not isinstance(layer, Image):
         return False
@@ -147,7 +147,7 @@ def check_image_layer(
     return True
 
 
-def from_layer_data_tuple(data: LayerDataTuple) -> Union[Image, Labels, Shapes, Points]:
+def from_layer_data_tuple(data: LayerDataTuple) -> Image | Labels | Shapes | Points:
     layer_data, layer_params, layer_type = data
 
     if layer_type == "image":
@@ -171,7 +171,7 @@ def get_backend(reader: Callable) -> WSIReaderBackend:
 
 
 @pytest.fixture(scope="session")
-def pyramid() -> List[np.ndarray]:
+def pyramid() -> list[np.ndarray]:
     return list(
         map(
             skimage.util.img_as_ubyte,
@@ -184,25 +184,27 @@ def pyramid() -> List[np.ndarray]:
 
 
 @pytest.fixture(scope="session")
-# pylint: disable-next=redefined-outer-name)
-def tmp_data_ome(tmp_path_factory: TempPathFactory, pyramid: List[np.ndarray]) -> Path:
+def tmp_data_ome(
+    tmp_path_factory: TempPathFactory,
+    pyramid: list[np.ndarray],  # pylint: disable=redefined-outer-name
+) -> Path:
     path = tmp_path_factory.mktemp("data") / "image.ome.tif"
 
     with tifffile.TiffWriter(path, bigtiff=True) as handle:
         options = dict(tile=(256, 256), dtype=np.uint8, compression=COMPRESSION.JPEG)
 
         assert len(pyramid) > 1
-        handle.write(pyramid[0], subifds=len(pyramid) - 1, **options)
+        handle.write(pyramid[0], subifds=len(pyramid) - 1, **options)  # type: ignore
         for pyr_level in pyramid[1:]:
-            handle.write(pyr_level, **options)
+            handle.write(pyr_level, **options)  # type: ignore
 
     return path
 
 
 @pytest.fixture(scope="session")
-# pylint: disable-next=redefined-outer-name)
 def tmp_data_gtiff(
-    tmp_path_factory: TempPathFactory, pyramid: List[np.ndarray]
+    tmp_path_factory: TempPathFactory,
+    pyramid: list[np.ndarray],  # pylint: disable=redefined-outer-name
 ) -> Path:
     path = tmp_path_factory.mktemp("data") / "image.tif"
 

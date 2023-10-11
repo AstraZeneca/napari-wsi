@@ -1,4 +1,4 @@
-from typing import Callable
+from collections.abc import Callable
 
 import pytest
 from pytest import FixtureRequest
@@ -14,7 +14,7 @@ from .conftest import (
 )
 
 
-@pytest.mark.parametrize("case", DEFAULT_TEST_CASES, ids=(lambda case: case.id))
+@pytest.mark.parametrize("case", DEFAULT_TEST_CASES, ids=lambda case: case.id)
 def test_wsi_reader_widget(
     case: TestCase, request: FixtureRequest, make_napari_viewer: Callable
 ):

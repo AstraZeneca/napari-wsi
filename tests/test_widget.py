@@ -1,44 +1,47 @@
 from collections.abc import Callable
 
+import numpy as np
 import pytest
+from napari.layers import Image
 from pytest import FixtureRequest
 
-from napari_wsi.widget import get_wsi_reader_widget
+from napari_wsi.widget import WSIReaderWidget
 
 from .conftest import (
     DEFAULT_TEST_CASES,
-    TestCase,
-    check_image_layers,
-    from_layer_data_tuple,
-    get_backend,
+    Case,
 )
 
 
 @pytest.mark.parametrize("case", DEFAULT_TEST_CASES, ids=lambda case: case.id)
 def test_wsi_reader_widget(
-    case: TestCase, request: FixtureRequest, make_napari_viewer: Callable
+    case: Case, request: FixtureRequest, make_napari_viewer: Callable
 ):
     """Test that the reader widget works for the given sample data."""
 
-    path = case.get_path(request)
+    viewer = make_napari_viewer()
+    path = case.path(request)
 
-    # pylint: disable-next=no-value-for-parameter
-    widget = get_wsi_reader_widget()
+    widget = WSIReaderWidget(viewer)
+    widget._backend_edit.value = case.backend
+    widget._path_edit.value = path
+    widget._color_space_edit.value = case.color_space
 
-    result = widget(
-        path=path,
-        backend=get_backend(case.expected_reader),
-        split_rgb=case.split_rgb,
-    )
-    assert result is not None
+    assert len(viewer.layers) == 0
+    widget._on_load_button_clicked()
+    assert len(viewer.layers) == 1
+    layer = viewer.layers[0]
+    assert isinstance(layer, Image)
 
-    layers = list(map(from_layer_data_tuple, result))
-    assert len(layers) == case.expected_num_layers
+    assert layer.name
+    assert layer.visible
+    assert layer.ndim == 3 if layer.multiscale else 2
+    assert np.allclose(layer.scale, 1)
+    assert layer.multiscale == case.multiscale
+    assert layer.rgb == case.rgb
 
-    assert check_image_layers(
-        layers=layers,
-        base_name=path.stem,
-        multiscale=case.expected_multiscale,
-        rgb=case.expected_rgb,
-        viewer=make_napari_viewer(),
-    )
+    assert layer.metadata["path"] == str(path)
+    assert layer.metadata["resolution"] == case.resolution
+    assert layer.metadata["color_space"] == str(case.color_space)
+
+    widget.close()

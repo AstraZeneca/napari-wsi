@@ -21,24 +21,19 @@ example.
 
 ## Setting up a development environment
 
-This project uses [poetry] packaging and dependency management.
+This project uses [uv] for packaging and dependency management. To install the
+full set of dependencies needed for developement, run:
 
 ```bash
-poetry install
-poetry run pip install pyqt5
-poetry run napari
+uv sync --all-extras --dev
 ```
 
-Note: `pyqt5` is not a direct dependency of this plugin, but is necessary to run
-napari (see the [napari installation guide]).
-
-## Running checks and tests
+To run a code formatter, a linter and all unit tests, run:
 
 ```bash
-poetry run invoke check
-poetry run invoke test
+uv run invoke fix
+uv run invoke check
+uv run invoke test
 ```
 
-[napari installation guide]:
-  https://napari.org/stable/tutorials/fundamentals/installation.html#choosing-a-different-qt-backend
-[poetry]: https://python-poetry.org/
+[uv]: https://github.com/astral-sh/uv

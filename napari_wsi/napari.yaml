@@ -2,16 +2,22 @@ name: napari-wsi
 display_name: WSI Reader
 contributions:
   commands:
-    - id: napari-wsi.get_wsi_reader
-      python_name: napari_wsi.reader:get_wsi_reader
-      title: A reader for whole slide image data.
-    - id: napari-wsi.get_wsi_reader_widget
-      python_name: napari_wsi.widget:get_wsi_reader_widget
-      title: A widget for reading whole slide image data.
+    - id: napari-wsi.wsi_reader_openslide
+      python_name: napari_wsi.reader:wsi_reader_openslide
+      title: A reader for whole-slide image data based on openslide.
+    - id: napari-wsi.wsi_reader_rasterio
+      python_name: napari_wsi.reader:wsi_reader_rasterio
+      title: A reader for whole-slide image data based on rasterio.
+    - id: napari-wsi.wsi_reader_widget
+      python_name: napari_wsi.widget:WSIReaderWidget
+      title: A widget for reading whole-slide image data.
   readers:
-    - command: napari-wsi.get_wsi_reader
+    - command: napari-wsi.wsi_reader_openslide
       accepts_directories: false
-      filename_patterns: ["*.bif", "*.ndpi", "*.qptiff", "*.scn", "*.svs", "*.tif", "*.tiff"]
+      filename_patterns: ["*.bif", "*.ndpi", "*.scn", "*.svs"]
+    - command: napari-wsi.wsi_reader_rasterio
+      accepts_directories: false
+      filename_patterns: ["*.tif", "*.tiff"]
   widgets:
-    - command: napari-wsi.get_wsi_reader_widget
+    - command: napari-wsi.wsi_reader_widget
       display_name: WSI Reader

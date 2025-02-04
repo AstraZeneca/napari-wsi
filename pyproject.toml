@@ -1,74 +1,102 @@
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.poetry]
+[project]
 name = "napari-wsi"
-version = "0.1.4"
-description = "A plugin to read whole slide images within napari."
-license="Apache-2.0"
+version = "1.0.0"
+description = "A plugin to read whole-slide images within napari."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+license-files = [
+    "LICENSE",
+]
 authors = [
-    "Philipp Plewa <philipp.plewa@astrazeneca.com>",
+    { name = "Philipp Plewa", email = "philipp.plewa@astrazeneca.com" },
 ]
 maintainers = [
-    "Philipp Plewa <philipp.plewa@astrazeneca.com>",
-    "Robert Schweizer <robert.schweizer@astrazeneca.com>",
+    { name = "Philipp Plewa", email = "philipp.plewa@astrazeneca.com" },
+    { name = "Robert Schweizer", email = "robert.schweizer@astrazeneca.com" },
 ]
-readme = "README.md"
-repository = "https://github.com/AstraZeneca/napari-wsi"
 classifiers = [
     "Framework :: napari",
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
     "Topic :: Scientific/Engineering :: Image Processing",
 ]
+dependencies = [
+    "dask>=2025.1",
+    "magicgui>=0.10",
+    "numpy>=1.26",
+    "pillow>=11.1",
+    "universal-pathlib>=0.2",
+    "zarr>=3.0",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.10,<3.12"
-dask = {version = ">=2023", extras = ["array"]}
-imagecodecs = ">=2023.9.18"
-magicgui = ">=0.7.3"
-matplotlib = ">=3.8"
-napari = ">=0.4.18"
-numpy = ">=1.26"
-rasterio = ">=1.3"
-tifffile = ">=2023"
-zarr = ">=2.16"
+[project.optional-dependencies]
+openslide = [
+    "openslide-python>=1.4",
+]
+rasterio = [
+    "rasterio>=1.4",
+]
+wsidicom = [
+    "wsidicom>=0.22",
+]
+all = [
+    "napari-wsi[openslide,rasterio,wsidicom]"
+]
 
-[tool.poetry.group.dev.dependencies]
-black = "23.9.*"
-invoke = "2.2.*"
-isort = "5.12.*"
-mypy= "1.6.*"
-pylint = "3.0.*"
-pytest = "7.4.*"
-pytest-cov = "4.1.*"
-pytest-qt = "4.2.*"
-scikit-image = "0.22.*"
+[dependency-groups]
+dev = [
+    "invoke>=2.2.0",
+    "mypy>=1.14",
+    "napari>=0.5",
+    "openslide-bin>=4.0",
+    "pyqt5>=5.15",
+    "pytest>=8.3",
+    "pytest-cov>=6.0",
+    "pytest-qt>=4.4",
+    "ruff>=0.9",
+    "scikit-image>=0.25",
+]
 
-[tool.poetry.plugins."napari.manifest"]
+[project.urls]
+Repository = "https://github.com/AstraZeneca/napari-wsi"
+
+[project.entry-points."napari.manifest"]
 napari-wsi = "napari_wsi:napari.yaml"
 
-[tool.isort]
-profile = "black"
-
 [tool.mypy]
-exclude = ["venv"]
+check_untyped_defs = true
+warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
+ignore_missing_imports = true
 module = [
     "napari.*",
     "rasterio.*",
-    "zarr.*",
+    "wsidicom.*",
 ]
-ignore_missing_imports = true
 
-[tool.pylint."MESSAGES CONTROL"]
-disable = """
-duplicate-code,
-invalid-name,
-missing-docstring,
-too-many-arguments,
-too-many-locals,
-use-dict-literal,
-"""
+[tool.ruff]
+target-version = "py310"
+line-length = 88
+lint.select = [
+    "E", "F", "W", #flake8
+    "UP", # pyupgrade
+    "I", # isort
+    "BLE", # flake8-blind-exception
+    "B", # flake8-bugbear
+    "A", # flake8-builtins
+    "C4", # flake8-comprehensions
+    "ISC", # flake8-implicit-str-concat
+    "G", # flake8-logging-format
+    "PIE", # flake8-pie
+    "SIM", # flake8-simplify
+]
+lint.ignore = [
+    "B028", # for warnings
+    "ISC001", # for ruff
+]

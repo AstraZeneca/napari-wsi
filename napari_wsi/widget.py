@@ -1,39 +1,138 @@
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from magicgui import magic_factory
-from napari.types import LayerDataTuple
-
-from . import read_rasterio, read_tifffile
-
-
-class WSIReaderBackend(Enum):
-    tifffile = "tifffile"
-    rasterio = "rasterio"
-
-
-DEFAULT_BACKEND = WSIReaderBackend.tifffile
-
-
-@magic_factory(
-    call_button="Load",
-    path={"label": "Path", "tooltip": "The file path."},
-    backend={"label": "Backend", "tooltip": "The backend for reading WSI data."},
-    series={"label": "Series", "tooltip": "The image series to read."},
-    split_rgb={"label": "Split RGB", "tooltip": "If set, split 3-channel images."},
+from magicgui.types import FileDialogMode
+from magicgui.widgets import (
+    ComboBox,
+    Container,
+    FileEdit,
+    Image,
+    LineEdit,
+    PushButton,
+    RadioButtons,
 )
-def get_wsi_reader_widget(
-    path: Path,
-    backend: WSIReaderBackend = DEFAULT_BACKEND,
-    series: int = 0,
-    split_rgb: bool = False,
-) -> list[LayerDataTuple]:
-    if not path.is_file():
-        raise FileNotFoundError(path)
 
-    if backend == WSIReaderBackend.tifffile:
-        return read_tifffile(path, series=series, split_rgb=split_rgb)
-    if backend == WSIReaderBackend.rasterio:
-        return read_rasterio(path, split_rgb=split_rgb)
+from .backends.common import WSIReaderBackend
+from .color_transform import ColorSpace
+from .common import WSIStore, open_store
 
-    raise ValueError(f"Invalid backend {backend}.")
+if TYPE_CHECKING:
+    import napari
+
+
+class PathChoice(StrEnum):
+    PATH = "Path"
+    URL = "URL"
+
+
+class WSIReaderWidget(Container):
+    def __init__(self, viewer: "napari.viewer.Viewer") -> None:
+        super().__init__()
+        self._viewer = viewer
+        self._store: WSIStore | None = None
+
+        # Define the interactive widget elements.
+        self._backend_edit = ComboBox(label="Backend", choices=WSIReaderBackend)
+        self._color_space_edit = ComboBox(label="Color Space", choices=ColorSpace)
+        self._choice_edit = RadioButtons(choices=PathChoice, orientation="horizontal")
+        self._path_edit = FileEdit(label="Path")
+        self._url_edit = LineEdit(label="URL")
+        self._load_button = PushButton(name="Load")
+
+        # Define the non-editable widget elements.
+        self._slide_field = LineEdit(label="Slide ID", enabled=False, visible=False)
+        self._patient_field = LineEdit(label="Patient ID", enabled=False, visible=False)
+        self._label_image_field = Image(visible=False)
+
+        # Set up custom event handlers.
+        self._backend_edit.changed.connect(self._on_backend_changed)
+        self._choice_edit.changed.connect(self._on_choice_changed)
+        self._load_button.clicked.connect(self._on_load_button_clicked)
+
+        # Set the initial values, triggering the changed events.
+        self._choice_edit.value = PathChoice.PATH
+        self._color_space_edit.value = ColorSpace.RAW
+        self._backend_edit.value = WSIReaderBackend.WSIDICOM
+
+        self.extend(
+            [
+                self._backend_edit,
+                self._choice_edit,
+                self._path_edit,
+                self._url_edit,
+                self._color_space_edit,
+                self._load_button,
+                self._slide_field,
+                self._patient_field,
+                # We don't add the label image to the container, so that it will
+                # be opened in a separate window, for better visibility.
+            ]
+        )
+
+    @property
+    def path(self) -> str | Path:
+        if self._choice_edit.value == PathChoice.PATH:
+            assert isinstance(self._path_edit.value, Path)
+            return self._path_edit.value
+        if self._choice_edit.value == PathChoice.URL:
+            return self._url_edit.value
+        raise ValueError(f"Invalid choice: {self._choice_edit.value}")
+
+    @property
+    def backend(self) -> WSIReaderBackend:
+        return self._backend_edit.value
+
+    @property
+    def color_space(self) -> ColorSpace:
+        return self._color_space_edit.value
+
+    def _on_backend_changed(self, value: WSIReaderBackend) -> None:
+        if value == WSIReaderBackend.WSIDICOM:
+            self._path_edit.mode = FileDialogMode.EXISTING_DIRECTORY
+            self._choice_edit.visible = True
+        else:
+            self._path_edit.mode = FileDialogMode.EXISTING_FILE
+            self._choice_edit.visible = False
+            self._choice_edit.value = PathChoice.PATH
+
+    def _on_choice_changed(self, value: str) -> None:
+        self._path_edit.visible = value == PathChoice.PATH
+        self._url_edit.visible = value == PathChoice.URL
+
+    def _on_load_button_clicked(self) -> None:
+        self._store = open_store(
+            path=self.path, backend=self.backend, color_space=self.color_space
+        )
+
+        # Add the image layer(s) to the viewer.
+        for item in self._store.to_layer_data_tuples():
+            layer_data, layer_params, layer_type = item
+            add_layer = getattr(self._viewer, f"add_{layer_type}")
+            add_layer(layer_data, **layer_params)
+
+        # Display the label image, if available.
+        self._label_image_field.visible = False
+        if self._store.label_image is not None:
+            # Let's set the image width to the widget width, which should be reasonable.
+            self._label_image_field.set_data(self._store.label_image, width=self.width)
+            self._label_image_field.visible = True
+
+        # Display additional metadata, if available.
+        self._slide_field.visible = False
+        self._patient_field.visible = False
+        if self.backend == WSIReaderBackend.WSIDICOM:
+            # The backend must be installed, or we could not have opened the store.
+            from .backends.wsidicom import WSIDicomStore
+
+            assert isinstance(self._store, WSIDicomStore)
+            metadata = self._store.typed_metadata
+            self._slide_field.value = metadata.slide.identifier or ""
+            self._patient_field.value = metadata.patient.identifier or ""
+            self._slide_field.visible = True
+            self._patient_field.visible = True
+
+    def close(self) -> None:
+        if self._store is not None:
+            self._store.close()
+        super().close()

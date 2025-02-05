@@ -1,28 +1,19 @@
-import invoke
+from invoke import task
 
 
-@invoke.task
-def format(ctx):
-    print("## Run black")
-    ctx.run("black .")
-    print("## Run isort")
-    ctx.run("isort .")
+@task
+def fix(ctx):
+    ctx.run("ruff format .")
+    ctx.run("ruff check . --fix")
 
 
-@invoke.task
+@task
 def check(ctx):
-    print("## Check formatting")
-    ctx.run("black --check .")
-    print("## Check imports")
-    ctx.run("isort . --check-only")
-    print("## Check static typing")
-    ctx.run("mypy . --check-untyped-defs")
-    print("## Linting code")
-    ctx.run("pylint napari_wsi")
-    ctx.run("pylint tests")
+    ctx.run("ruff format . --check")
+    ctx.run("ruff check .")
+    ctx.run("mypy .")
 
 
-@invoke.task
+@task
 def test(ctx):
-    print("## Run tests")
     ctx.run("pytest --verbose --cov=napari_wsi tests")

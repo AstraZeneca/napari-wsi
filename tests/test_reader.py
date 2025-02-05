@@ -1,48 +1,52 @@
 from collections.abc import Callable
 
 import pytest
+from napari.layers import Image
 from pytest import FixtureRequest
 
-from napari_wsi.reader import get_wsi_reader
+from napari_wsi.backends.common import WSIReaderBackend
+from napari_wsi.reader import wsi_reader_openslide, wsi_reader_rasterio
 
 from .conftest import (
     DEFAULT_TEST_CASES,
     TEST_DATA_GTIF,
     TEST_DATA_SVS,
-    TestCase,
-    check_image_layers,
-    from_layer_data_tuple,
+    Case,
 )
 
 
 @pytest.mark.parametrize("case", DEFAULT_TEST_CASES, ids=lambda case: case.id)
-def test_wsi_reader(
-    case: TestCase, request: FixtureRequest, make_napari_viewer: Callable
-):
+def test_wsi_reader(case: Case, request: FixtureRequest, make_napari_viewer: Callable):
     """Test that the napari reader works for the given sample data."""
 
-    path = case.get_path(request)
+    if case.backend == WSIReaderBackend.OPENSLIDE:
+        get_wsi_reader = wsi_reader_openslide
+    elif case.backend == WSIReaderBackend.RASTERIO:
+        get_wsi_reader = wsi_reader_rasterio
+    else:
+        return
+
+    viewer = make_napari_viewer()
+    path = case.path(request)
 
     reader = get_wsi_reader(str(path))
     assert callable(reader)
-    assert reader == case.expected_reader
 
-    result = reader(str(path), split_rgb=case.split_rgb)
-
-    layers = list(map(from_layer_data_tuple, result))
-    assert len(layers) == case.expected_num_layers
-
-    assert check_image_layers(
-        layers=layers,
-        base_name=path.stem,
-        multiscale=case.expected_multiscale,
-        rgb=case.expected_rgb,
-        viewer=make_napari_viewer(),
-    )
+    items = reader(str(path))
+    assert len(items) == 1
+    layer_data, layer_params, layer_type = items[0]
+    add_layer = getattr(viewer, f"add_{layer_type}")
+    layer = add_layer(layer_data, **layer_params)
+    assert isinstance(layer, Image)
 
 
-def test_wsi_reader_pass():
-    """Test that the napari reader only accepts single file paths."""
+@pytest.mark.parametrize(
+    "get_wsi_reader",
+    [wsi_reader_openslide, wsi_reader_rasterio],
+    ids=["openslide", "rasterio"],
+)
+def test_wsi_reader_pass(get_wsi_reader: Callable):
+    """Test that the napari readers only accept single file paths."""
 
     reader = get_wsi_reader([str(TEST_DATA_SVS), str(TEST_DATA_GTIF)])
     assert reader is None

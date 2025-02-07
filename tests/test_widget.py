@@ -25,7 +25,7 @@ def test_wsi_reader_widget(
     widget = WSIReaderWidget(viewer)
     widget._backend_edit.value = case.backend
     widget._path_edit.value = path
-    widget._color_space_edit.value = case.color_space
+    widget._color_space_edit.value = case.target_color_space
 
     assert len(viewer.layers) == 0
     widget._on_load_button_clicked()
@@ -42,6 +42,6 @@ def test_wsi_reader_widget(
 
     assert layer.metadata["path"] == str(path)
     assert layer.metadata["resolution"] == case.resolution
-    assert layer.metadata["color_space"] == str(case.color_space)
+    assert layer.metadata["color_space"] == str(case.expected_color_space)
 
     widget.close()

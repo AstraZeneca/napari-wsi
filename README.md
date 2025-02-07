@@ -48,10 +48,8 @@ dependencies:
   - openslide-python>=1.4
   # rasterio backend
   - rasterio>=1.4
-  - pip:
-      # wsidicom backend
-      - wsidicom>=0.22
-      - numpy<=2.1 # for numba
+  # wsidicom backend
+  - wsidicom>=0.22
 ```
 
 Then create this environment by running:

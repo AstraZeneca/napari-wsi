@@ -17,11 +17,10 @@ from zarr.core.common import JSON
 from zarr.storage import MemoryStore
 
 from .backends.common import WSIReaderBackend
+from .color_transform import ColorSpace, ColorTransform
 
 if TYPE_CHECKING:
     import napari
-
-from .color_transform import ColorSpace, ColorTransform
 
 
 @dataclass(frozen=True)

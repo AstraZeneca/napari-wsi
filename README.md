@@ -9,23 +9,56 @@ A plugin to read whole-slide images within [napari].
 
 ---
 
-## Installation
+## Installation via pip
 
 You can install `napari-wsi` via [pip]:
 
 ```bash
-pip install napari-wsi[all]
+pip install "napari-wsi[all]>=1.0"
 ```
 
 This automatically installs all optional backends, as a shortcut for:
 
 ```bash
-pip install napari-wsi[openslide,rasterio,wsidicom]
+pip install "napari-wsi[openslide,rasterio,wsidicom]>=1.0"
 ```
 
 In addition, to be able to read images using the `openslide` backend, it is
 required to install the OpenSlide library itself, for example by installing the
 [openslide-bin] python package (also via [pip]).
+
+## Installation via conda
+
+To set up a new [conda] environment for `napari-wsi` that also includes all
+optional dependencies, create a new file named `napari-wsi.yml` with the
+following content:
+
+```yaml
+name: napari-wsi
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - napari-wsi=1.*
+  # napari
+  - napari
+  - pyqt
+  # openslide backend
+  - openslide>=4.0
+  - openslide-python>=1.4
+  # rasterio backend
+  - rasterio>=1.4
+  - pip:
+      # wsidicom backend
+      - wsidicom>=0.22
+      - numpy<=2.1 # for numba
+```
+
+Then create this environment by running:
+
+```bash
+conda env create -f napari-wsi.yml
+```
 
 # Description
 
@@ -62,6 +95,7 @@ viewer = Viewer()
 viewer.open("CMU-1.svs", plugin="napari-wsi")
 ```
 
+[conda]: https://conda-forge.org/
 [napari]: https://github.com/napari/napari
 [openslide]: https://github.com/openslide/openslide-python
 [openslide-bin]: https://pypi.org/project/openslide-bin/

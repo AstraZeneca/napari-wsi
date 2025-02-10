@@ -106,10 +106,7 @@ class WSIReaderWidget(Container):
         )
 
         # Add the image layer(s) to the viewer.
-        for item in self._store.to_layer_data_tuples():
-            layer_data, layer_params, layer_type = item
-            add_layer = getattr(self._viewer, f"add_{layer_type}")
-            add_layer(layer_data, **layer_params)
+        self._store.to_viewer(self._viewer)
 
         # Display the label image, if available.
         self._label_image_field.visible = False

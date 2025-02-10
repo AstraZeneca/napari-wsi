@@ -29,34 +29,13 @@ required to install the OpenSlide library itself, for example by installing the
 
 ## Installation via conda
 
-To set up a new [conda] environment for `napari-wsi` that also includes all
-optional dependencies, create a new file named `napari-wsi.yml` with the
-following content:
-
-```yaml
-name: napari-wsi
-channels:
-  - conda-forge
-dependencies:
-  - python=3.11
-  - napari-wsi=1.*
-  # napari
-  - napari
-  - pyqt
-  # openslide backend
-  - openslide>=4.0
-  - openslide-python>=1.4
-  # rasterio backend
-  - rasterio>=1.4
-  # wsidicom backend
-  - wsidicom>=0.22
-```
-
-Then create this environment by running:
+You can also install `napari-wsi` via [conda]:
 
 ```bash
-conda env create -f napari-wsi.yml
+conda install -c conda-forge "napari-wsi>=1.0"
 ```
+
+This already installs all optional dependencies, including OpenSlide.
 
 # Description
 
@@ -80,18 +59,38 @@ This plugin can also be used to open image files via drag and drop into the
 viewer window. The file suffixes '.bif', '.ndpi', '.scn', '.svs' are registered
 with the `openslide` backend, while the suffixes '.tif' and '.tiff' are
 registered with the `rasterio` backend. These files can also be opened directly
-from the command line or from a python script:
+from the command line or from a python script, in various ways:
 
 ```bash
 napari CMU-1.svs
 ```
 
 ```python
-from napari.viewer import Viewer
+from napari import Viewer
 
 viewer = Viewer()
 viewer.open("CMU-1.svs", plugin="napari-wsi")
 ```
+
+```python
+from napari import Viewer
+from napari_wsi.backends.openslide import OpenSlideStore
+
+viewer = Viewer()
+store = OpenSlideStore("CMU-1.svs")
+store.to_viewer(viewer)
+```
+
+# Known Issues & Other Notes
+
+- This plugin is prototype research software and there may be **breaking
+  changes** with each release of the plugin, which is also the case for current
+  releases of the [napari] viewer itself.
+- The `wsidicom` backend supports loading annotations together with the image
+  data. However, this may take several minutes, depending on the number and
+  complexity of the annotations. When loading more than a few thousand polygon
+  annotations, make sure that the experimental "[triangles] speedup" setting is
+  enabled.
 
 [conda]: https://conda-forge.org/
 [napari]: https://github.com/napari/napari
@@ -99,5 +98,6 @@ viewer.open("CMU-1.svs", plugin="napari-wsi")
 [openslide-bin]: https://pypi.org/project/openslide-bin/
 [pip]: https://github.com/pypa/pip
 [rasterio]: https://github.com/rasterio/rasterio
+[triangles]: https://napari.org/island-dispatch/blog/triangles_speedup_beta.html
 [wsidicom]: https://github.com/imi-bigpicture/wsidicom
 [zarr]: https://github.com/zarr-developers/zarr-python

@@ -42,6 +42,9 @@ rasterio = [
     "rasterio>=1.4",
 ]
 wsidicom = [
+    "colorspacious>=1.1.2",
+    "pandas>=2.0",
+    "shapely>=2.0",
     "wsidicom>=0.22",
 ]
 all = [
@@ -52,8 +55,9 @@ all = [
 dev = [
     "invoke>=2.2.0",
     "mypy>=1.14",
-    "napari>=0.5",
+    "napari[optional]>=0.5.6",
     "openslide-bin>=4.0",
+    "pandas-stubs>=2.2",
     "pyqt5>=5.15",
     "pytest>=8.3",
     "pytest-cov>=6.0",
@@ -75,8 +79,10 @@ warn_unused_ignores = true
 [[tool.mypy.overrides]]
 ignore_missing_imports = true
 module = [
+    "colorspacious.*",
     "napari.*",
     "rasterio.*",
+    "shapely.*",
     "wsidicom.*",
 ]
 

@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from magicgui.types import FileDialogMode
 from magicgui.widgets import (
+    CheckBox,
     ComboBox,
     Container,
     FileEdit,
@@ -38,6 +39,7 @@ class WSIReaderWidget(Container):
         self._choice_edit = RadioButtons(choices=PathChoice, orientation="horizontal")
         self._path_edit = FileEdit(label="Path")
         self._url_edit = LineEdit(label="URL")
+        self._annotations_edit = CheckBox(label="Load Annotations", value=False)
         self._load_button = PushButton(name="Load")
 
         # Define the non-editable widget elements.
@@ -62,6 +64,7 @@ class WSIReaderWidget(Container):
                 self._path_edit,
                 self._url_edit,
                 self._color_space_edit,
+                self._annotations_edit,
                 self._load_button,
                 self._slide_field,
                 self._patient_field,
@@ -87,14 +90,23 @@ class WSIReaderWidget(Container):
     def color_space(self) -> ColorSpace:
         return self._color_space_edit.value
 
+    @property
+    def layer_type(self) -> tuple[str, ...]:
+        layer_type: tuple[str, ...] = ("image",)
+        if self._annotations_edit.value:
+            layer_type += ("shapes", "points")
+        return layer_type
+
     def _on_backend_changed(self, value: WSIReaderBackend) -> None:
         if value == WSIReaderBackend.WSIDICOM:
             self._path_edit.mode = FileDialogMode.EXISTING_DIRECTORY
             self._choice_edit.visible = True
+            self._annotations_edit.visible = True
         else:
             self._path_edit.mode = FileDialogMode.EXISTING_FILE
             self._choice_edit.visible = False
             self._choice_edit.value = PathChoice.PATH
+            self._annotations_edit.visible = False
 
     def _on_choice_changed(self, value: str) -> None:
         self._path_edit.visible = value == PathChoice.PATH
@@ -105,11 +117,10 @@ class WSIReaderWidget(Container):
             path=self.path, backend=self.backend, color_space=self.color_space
         )
 
-        # Add the image layer(s) to the viewer.
-        for item in self._store.to_layer_data_tuples():
-            layer_data, layer_params, layer_type = item
-            add_layer = getattr(self._viewer, f"add_{layer_type}")
-            add_layer(layer_data, **layer_params)
+        if self.backend == WSIReaderBackend.WSIDICOM:
+            self._store.to_viewer(self._viewer, layer_type=self.layer_type)
+        else:
+            self._store.to_viewer(self._viewer)
 
         # Display the label image, if available.
         self._label_image_field.visible = False

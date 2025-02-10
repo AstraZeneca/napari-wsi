@@ -85,8 +85,8 @@ class OpenSlideStore(WSIStore):
 
     @cached_property
     def metadata(self) -> dict[str, JSON]:
-        slide_metadata = dict(self._handle.properties)
-        return slide_metadata | super().metadata
+        backend_metadata = dict(self._handle.properties)
+        return {**super().metadata, "backend": backend_metadata}
 
     @cached_property
     def label_image(self) -> np.ndarray | None:

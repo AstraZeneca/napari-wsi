@@ -1,3 +1,4 @@
+from functools import cached_property
 from pathlib import Path
 from warnings import catch_warnings
 
@@ -5,6 +6,7 @@ import numpy as np
 from upath import UPath
 from zarr.abc.store import ByteRequest
 from zarr.core.buffer import Buffer, BufferPrototype
+from zarr.core.common import JSON
 
 try:
     import rasterio
@@ -57,6 +59,11 @@ class RasterioStore(WSIStore):
                 levels += PyramidLevel(factor=factor, shape=shape, chunks=chunks)
 
         super().__init__(path=path, levels=levels)
+
+    @cached_property
+    def metadata(self) -> dict[str, JSON]:
+        # We're not providing any backend-specific metadata right now.
+        return {**super().metadata, "backend": {}}
 
     async def get(
         self,

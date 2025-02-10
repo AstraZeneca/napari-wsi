@@ -36,7 +36,8 @@ class Case:
     multiscale: bool
     rgb: bool
     resolution: tuple[float, float] | None
-    color_space: ColorSpace
+    target_color_space: ColorSpace = ColorSpace.RAW
+    expected_color_space: ColorSpace = ColorSpace.RAW
     file_path: Path | None = None
     file_fixture: str | None = None
 
@@ -57,7 +58,6 @@ DEFAULT_TEST_CASES = [
         file_path=TEST_DATA_SVS,
         backend=WSIReaderBackend.OPENSLIDE,
         resolution=(0.499, 0.499),
-        color_space=ColorSpace.RAW,
         multiscale=False,
         rgb=True,
     ),
@@ -66,16 +66,17 @@ DEFAULT_TEST_CASES = [
         file_path=TEST_DATA_SVS,
         backend=WSIReaderBackend.OPENSLIDE,
         resolution=(0.499, 0.499),
-        color_space=ColorSpace.sRGB,
         multiscale=False,
         rgb=True,
+        # The test image does not actually have a color profile.
+        target_color_space=ColorSpace.sRGB,
+        expected_color_space=ColorSpace.RAW,
     ),
     Case(
         id="gtiff-default",
         file_path=TEST_DATA_GTIF,
         backend=WSIReaderBackend.RASTERIO,
         resolution=None,
-        color_space=ColorSpace.RAW,
         multiscale=False,
         rgb=True,
     ),
@@ -84,7 +85,6 @@ DEFAULT_TEST_CASES = [
         file_fixture="dummy_gtiff",
         backend=WSIReaderBackend.RASTERIO,
         resolution=None,
-        color_space=ColorSpace.RAW,
         multiscale=True,
         rgb=False,
     ),
@@ -93,7 +93,6 @@ DEFAULT_TEST_CASES = [
         file_path=TEST_DATA_DCM,
         backend=WSIReaderBackend.WSIDICOM,
         resolution=(0.499, 0.499),
-        color_space=ColorSpace.RAW,
         multiscale=False,
         rgb=True,
     ),

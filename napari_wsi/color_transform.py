@@ -54,6 +54,8 @@ class ColorTransform:
 
     @property
     def color_space(self) -> ColorSpace:
+        if self.transform is None:
+            return ColorSpace.RAW
         return self._color_space
 
     def __call__(self, image: Image) -> Image:

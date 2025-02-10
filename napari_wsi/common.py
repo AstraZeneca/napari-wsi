@@ -101,7 +101,7 @@ class PyramidStore(MemoryStore, ABC):
         return None
 
     def to_layer_data_tuples(
-        self, rgb: bool = True, **kwargs
+        self, *, rgb: bool = True, **kwargs
     ) -> list["napari.types.LayerDataTuple"]:
         """Convert to a napari layer data tuple.
 
@@ -135,6 +135,16 @@ class PyramidStore(MemoryStore, ABC):
                 "image",
             )
         ]
+
+    def to_viewer(
+        self, viewer: "napari.viewer.Viewer", **kwargs
+    ) -> list["napari.layers.Layer"]:
+        layers = []
+        for item in self.to_layer_data_tuples(**kwargs):
+            layer_data, layer_params, layer_type = item
+            add_layer = getattr(viewer, f"add_{layer_type}")
+            layers.append(add_layer(layer_data, **layer_params))
+        return layers
 
 
 class WSIStore(PyramidStore, ABC):

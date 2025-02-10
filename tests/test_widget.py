@@ -43,5 +43,6 @@ def test_wsi_reader_widget(
     assert layer.metadata["path"] == str(path)
     assert layer.metadata["resolution"] == case.resolution
     assert layer.metadata["color_space"] == str(case.expected_color_space)
+    assert "backend" in layer.metadata
 
     widget.close()

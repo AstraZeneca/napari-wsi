@@ -104,8 +104,8 @@ class WSIDicomStore(WSIStore):
 
     @cached_property
     def metadata(self) -> dict[str, JSON]:
-        slide_metadata = WsiMetadataJsonSchema().dump(self.typed_metadata)
-        return slide_metadata | super().metadata
+        backend_metadata = WsiMetadataJsonSchema().dump(self.typed_metadata)
+        return {**super().metadata, "backend": backend_metadata}
 
     @cached_property
     def label_image(self) -> np.ndarray | None:

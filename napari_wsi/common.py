@@ -206,7 +206,7 @@ class WSIStore(PyramidStore, ABC):
 def open_store(
     path: str | Path | UPath,
     backend: WSIReaderBackend,
-    color_space: ColorSpace = ColorSpace.RAW,
+    color_space: str | ColorSpace = ColorSpace.RAW,
 ) -> WSIStore:
     if backend == WSIReaderBackend.OPENSLIDE:
         from .backends.openslide import OpenSlideStore

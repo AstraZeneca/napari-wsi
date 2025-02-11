@@ -200,7 +200,7 @@ class WSIDicomStore(WSIStore):
         path: str | Path | UPath,
         pyramid: int = 0,
         optical_path: str | None = None,
-        color_space: ColorSpace = ColorSpace.RAW,
+        color_space: str | ColorSpace = ColorSpace.RAW,
     ) -> None:
         """Initialize a `WSIDicomStore`.
 
@@ -210,6 +210,9 @@ class WSIDicomStore(WSIStore):
             optical_path: An identifier to select one of multiple optical paths.
             color_space: The target color space.
         """
+        if not isinstance(color_space, ColorSpace):
+            color_space = ColorSpace(color_space)
+
         self._handle = WsiDicom.open(path)
         self._handle.set_selected_pyramid(pyramid)
 

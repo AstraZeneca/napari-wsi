@@ -40,7 +40,7 @@ class OpenSlideStore(WSIStore):
     def __init__(
         self,
         path: str | Path | UPath,
-        color_space: ColorSpace = ColorSpace.RAW,
+        color_space: str | ColorSpace = ColorSpace.RAW,
     ) -> None:
         """Initialize an `OpenSlideStore`.
 
@@ -48,6 +48,9 @@ class OpenSlideStore(WSIStore):
             path: The path to the input image file.
             color_space: The target color space.
         """
+        if not isinstance(color_space, ColorSpace):
+            color_space = ColorSpace(color_space)
+
         self._handle = OpenSlide(path)
 
         # We need to read some data to determine the number of channels and dtype.

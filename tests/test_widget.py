@@ -7,10 +7,7 @@ from pytest import FixtureRequest
 
 from napari_wsi.widget import WSIReaderWidget
 
-from .conftest import (
-    DEFAULT_TEST_CASES,
-    Case,
-)
+from .conftest import DEFAULT_TEST_CASES, Case
 
 
 @pytest.mark.parametrize("case", DEFAULT_TEST_CASES, ids=lambda case: case.id)

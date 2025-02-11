@@ -7,12 +7,7 @@ from pytest import FixtureRequest
 from napari_wsi.backends.common import WSIReaderBackend
 from napari_wsi.reader import wsi_reader_openslide, wsi_reader_rasterio
 
-from .conftest import (
-    DEFAULT_TEST_CASES,
-    TEST_DATA_GTIF,
-    TEST_DATA_SVS,
-    Case,
-)
+from .conftest import DEFAULT_TEST_CASES, TEST_DATA_GTIF, TEST_DATA_SVS, Case
 
 
 @pytest.mark.parametrize("case", DEFAULT_TEST_CASES, ids=lambda case: case.id)

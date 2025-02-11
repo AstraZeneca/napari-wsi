@@ -77,7 +77,7 @@ class OpenSlideStore(WSIStore):
         with suppress(KeyError):
             mpp_x = float(self._handle.properties[PROPERTY_NAME_MPP_X])
             mpp_y = float(self._handle.properties[PROPERTY_NAME_MPP_Y])
-            return mpp_x, mpp_y
+            return mpp_y, mpp_x
         return None
 
     @property

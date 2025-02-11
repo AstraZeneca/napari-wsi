@@ -59,7 +59,7 @@ This plugin can also be used to open image files via drag and drop into the
 viewer window. The file suffixes '.bif', '.ndpi', '.scn', '.svs' are registered
 with the `openslide` backend, while the suffixes '.tif' and '.tiff' are
 registered with the `rasterio` backend. These files can also be opened directly
-from the command line or from a python script, in various ways:
+from the command line or from a python script:
 
 ```bash
 napari CMU-1.svs
@@ -72,14 +72,27 @@ viewer = Viewer()
 viewer.open("CMU-1.svs", plugin="napari-wsi")
 ```
 
+It is also possible to use the different backend classes directly, in which case
+some more features are available, for example:
+
 ```python
 from napari import Viewer
 from napari_wsi.backends.openslide import OpenSlideStore
 
 viewer = Viewer()
-store = OpenSlideStore("CMU-1.svs")
-store.to_viewer(viewer)
+
+# Display the image in the sRGB color space and a physical coordinate system:
+store = OpenSlideStore("CMU-1.svs", color_space="sRGB")
+(layer,) = store.to_viewer(viewer, spatial_transform=True)
+assert layer.metadata["color_space"] == "sRGB"
+
+# Display a scale bar to indicate milli- or micrometers, depending on the zoom level:
+viewer.scale_bar.visible = True
+viewer.scale_bar.colored = True
 ```
+
+The sample images used above are part of the OpenSlide test data (see [Aperio]
+and [DICOM]).
 
 # Known Issues & Other Notes
 
@@ -92,7 +105,9 @@ store.to_viewer(viewer)
   annotations, make sure that the experimental "[triangles] speedup" setting is
   enabled.
 
+[Aperio]: https://openslide.cs.cmu.edu/download/openslide-testdata/Aperio/
 [conda]: https://conda-forge.org/
+[DICOM]: https://openslide.cs.cmu.edu/download/openslide-testdata/DICOM/
 [napari]: https://github.com/napari/napari
 [openslide]: https://github.com/openslide/openslide-python
 [openslide-bin]: https://pypi.org/project/openslide-bin/

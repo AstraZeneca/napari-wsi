@@ -136,30 +136,12 @@ class PyramidStore(MemoryStore, ABC):
             )
         ]
 
-    def to_viewer(
-        self, viewer: "napari.viewer.Viewer", **kwargs
-    ) -> list["napari.layers.Layer"]:
-        layers = []
-        for item in self.to_layer_data_tuples(**kwargs):
-            layer_data, layer_params, layer_type = item
-            add_layer = getattr(viewer, f"add_{layer_type}")
-            layers.append(add_layer(layer_data, **layer_params))
-        return layers
-
 
 class WSIStore(PyramidStore, ABC):
     """A base class for reading multi-scale whole-slide images."""
 
-    def __init__(
-        self,
-        path: str | Path | UPath,
-        levels: PyramidLevels,
-        resolution: tuple[float, float] | None = None,
-        color_transform: ColorTransform | None = None,
-    ):
+    def __init__(self, path: str | Path | UPath, levels: PyramidLevels):
         self._path = UPath(path)
-        self._resolution = resolution
-        self._color_transform = color_transform or ColorTransform()
         super().__init__(name=self.path.stem, levels=levels)
 
     @property
@@ -168,11 +150,19 @@ class WSIStore(PyramidStore, ABC):
 
     @property
     def resolution(self) -> tuple[float, float] | None:
-        return self._resolution
+        return None
+
+    @property
+    def units(self) -> str | None:
+        return None
+
+    @property
+    def spatial_transform(self) -> np.ndarray:
+        return np.identity(3)
 
     @property
     def color_transform(self) -> ColorTransform:
-        return self._color_transform
+        return ColorTransform()
 
     @cached_property
     def metadata(self) -> dict[str, JSON]:
@@ -185,6 +175,32 @@ class WSIStore(PyramidStore, ABC):
     @cached_property
     def label_image(self) -> np.ndarray | None:
         return None
+
+    def to_transformed_layer_data_tuples(
+        self, **kwargs
+    ) -> list["napari.types.LayerDataTuple"]:
+        items = self.to_layer_data_tuples(**kwargs)
+        for item in items:
+            _, layer_params, _ = item
+            layer_params["affine"] = self.spatial_transform
+            layer_params["units"] = self.units
+        return items
+
+    def to_viewer(
+        self, viewer: "napari.viewer.Viewer", spatial_transform: bool = False, **kwargs
+    ) -> list["napari.layers.Layer"]:
+        layers = []
+        for item in (
+            self.to_transformed_layer_data_tuples(**kwargs)
+            if spatial_transform
+            else self.to_layer_data_tuples(**kwargs)
+        ):
+            layer_data, layer_params, layer_type = item
+            add_layer = getattr(viewer, f"add_{layer_type}")
+            layers.append(add_layer(layer_data, **layer_params))
+        if spatial_transform:
+            viewer.scale_bar.unit = self.units
+        return layers
 
 
 def open_store(

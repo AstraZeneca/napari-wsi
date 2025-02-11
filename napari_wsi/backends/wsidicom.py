@@ -230,16 +230,13 @@ class WSIDicomStore(WSIStore):
                 chunks=(level.tile_size.height, level.tile_size.width),
             )
 
-        super().__init__(
-            path=path,
-            levels=levels,
-            resolution=(self._handle.mpp.height, self._handle.mpp.width),
-            color_transform=ColorTransform(
-                profile=self._optical_path.icc_profile,
-                mode=sample_image.mode,
-                color_space=color_space,
-            ),
+        self._color_transform = ColorTransform(
+            profile=self._optical_path.icc_profile,
+            mode=sample_image.mode,
+            color_space=color_space,
         )
+
+        super().__init__(path=path, levels=levels)
 
     def _read_region(
         self, location: tuple[int, int], level: int, size: tuple[int, int]
@@ -250,6 +247,32 @@ class WSIDicomStore(WSIStore):
             size=size,
             path=self._optical_path.identifier,
         )
+
+    @property
+    def resolution(self) -> tuple[float, float] | None:
+        return (self._handle.mpp.height, self._handle.mpp.width)
+
+    @property
+    def units(self) -> str | None:
+        return "micrometer"
+
+    @property
+    def spatial_transform(self) -> np.ndarray:
+        matrix = np.identity(3)
+        ics = self._handle.metadata.image.image_coordinate_system
+        if ics is None:
+            return matrix
+        assert self.resolution is not None
+        scale_y, scale_x = self.resolution  # mu/px
+        offset_y, offset_x = ics.origin.y * 1000, ics.origin.x * 1000  # mu
+        orientation = ics.orientation.values
+        matrix[0] = (orientation[1] * scale_y, orientation[4] * scale_x, offset_y)
+        matrix[1] = (orientation[0] * scale_y, orientation[3] * scale_x, offset_x)
+        return matrix
+
+    @property
+    def color_transform(self) -> ColorTransform:
+        return self._color_transform
 
     @cached_property
     def typed_metadata(self) -> WsiMetadata:
@@ -312,7 +335,6 @@ class WSIDicomStore(WSIStore):
     def to_layer_data_tuples(
         self,
         *,
-        rgb: bool = True,
         layer_type: str | tuple[str, ...] = "image",
         tol: float = 0.0,
         **kwargs,
@@ -322,7 +344,7 @@ class WSIDicomStore(WSIStore):
 
         items = []
         if "image" in layer_type:
-            items.extend(super().to_layer_data_tuples(rgb=rgb, **kwargs))
+            items.extend(super().to_layer_data_tuples(**kwargs))
         for annotations in self._handle.annotations:
             if annotations.coordinate_type != "image":
                 continue

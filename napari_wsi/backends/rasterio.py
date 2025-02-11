@@ -60,6 +60,16 @@ class RasterioStore(WSIStore):
 
         super().__init__(path=path, levels=levels)
 
+    @property
+    def spatial_transform(self) -> np.ndarray:
+        matrix = np.identity(3)
+        if self._handle.transform is None:
+            return matrix
+        transform = self._handle.transform
+        matrix[0] = (transform.e, transform.d, transform.f)
+        matrix[1] = (transform.b, transform.a, transform.c)
+        return matrix
+
     @cached_property
     def metadata(self) -> dict[str, JSON]:
         # We're not providing any backend-specific metadata right now.

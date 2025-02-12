@@ -20,7 +20,7 @@ TEST_DATA_ANN = TEST_DATA_PATH / "annotations.json"
 
 
 class MockAnnotations:
-    def __init__(self, geometry_type: str):
+    def __init__(self, geometry_type: str) -> None:
         super().__init__()
         with open(TEST_DATA_ANN) as geojson_file:
             geojson_data = json.load(geojson_file)

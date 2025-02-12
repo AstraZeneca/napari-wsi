@@ -342,6 +342,20 @@ class WSIDicomStore(WSIStore):
         tol: float = 0.0,
         **kwargs,
     ) -> list["napari.types.LayerDataTuple"]:
+        """Convert to a napari layer data tuple.
+
+        All additional keword arguments are passed to the `to_layer_data_tuples` method
+        of the base class.
+
+        Args:
+            layer_type: The type of the layer data tuples to return. This can be one or
+                any subset of ("image", "shapes", "points").
+            tol: A tolerance value used to simplify all shape annotations. If this is
+                not greater zero, no simplification is performed.
+
+        Returns:
+            A list containing a napari layer data tuple of the given types.
+        """
         if isinstance(layer_type, str):
             layer_type = (layer_type,)
 

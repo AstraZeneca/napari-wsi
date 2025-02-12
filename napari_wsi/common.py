@@ -179,6 +179,10 @@ class WSIStore(PyramidStore, ABC):
     def to_transformed_layer_data_tuples(
         self, **kwargs
     ) -> list["napari.types.LayerDataTuple"]:
+        """Add a spatial transform to all layer data tuples.
+
+        This adds both 'affine' and 'units' to the layer parameters.
+        """
         items = self.to_layer_data_tuples(**kwargs)
         for item in items:
             _, layer_params, _ = item
@@ -189,6 +193,18 @@ class WSIStore(PyramidStore, ABC):
     def to_viewer(
         self, viewer: "napari.viewer.Viewer", spatial_transform: bool = False, **kwargs
     ) -> list["napari.layers.Layer"]:
+        """Add all available layer data to the napari viewer.
+
+        All additional keword arguments are passed to the `to_layer_data_tuples` method.
+
+        Args:
+            viewer: The napari viewer.
+            spatial_transform: If `True` and a spatial transform is available, all
+                layers are display in the corresponding transfored coordinate system.
+
+        Returns:
+            A list of layers added to the viewer.
+        """
         layers = []
         for item in (
             self.to_transformed_layer_data_tuples(**kwargs)

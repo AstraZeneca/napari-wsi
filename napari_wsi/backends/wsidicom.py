@@ -271,11 +271,11 @@ class WSIDicomStore(WSIStore):
         )
 
     @property
-    def resolution(self) -> tuple[float, float] | None:
+    def resolution(self) -> tuple[float, float]:
         return (self._handle.mpp.height, self._handle.mpp.width)
 
     @property
-    def units(self) -> str | None:
+    def units(self) -> str:
         return "micrometer"
 
     @property
@@ -284,7 +284,6 @@ class WSIDicomStore(WSIStore):
         ics = self._handle.metadata.image.image_coordinate_system
         if ics is None:
             return matrix
-        assert self.resolution is not None
         scale_y, scale_x = self.resolution  # mu/px
         offset_y, offset_x = ics.origin.y * 1000, ics.origin.x * 1000  # mu
         orientation = ics.orientation.values

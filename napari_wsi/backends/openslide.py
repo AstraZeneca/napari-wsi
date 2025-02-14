@@ -89,7 +89,7 @@ class OpenSlideStore(WSIStore):
         return None
 
     @property
-    def units(self) -> str | None:
+    def units(self) -> str:
         return "micrometer"
 
     @property

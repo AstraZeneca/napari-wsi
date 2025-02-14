@@ -140,12 +140,12 @@ class PyramidStore(MemoryStore, ABC):
 class WSIStore(PyramidStore, ABC):
     """A base class for reading multi-scale whole-slide images."""
 
-    def __init__(self, path: str | Path | UPath, levels: PyramidLevels):
-        self._path = UPath(path)
-        super().__init__(name=self.path.stem, levels=levels)
+    def __init__(self, path: UPath | None, levels: PyramidLevels):
+        self._path = path
+        super().__init__(name=path.stem if path is not None else "Image", levels=levels)
 
     @property
-    def path(self) -> UPath:
+    def path(self) -> UPath | None:
         return self._path
 
     @property
@@ -167,7 +167,7 @@ class WSIStore(PyramidStore, ABC):
     @cached_property
     def metadata(self) -> dict[str, JSON]:
         return {
-            "path": str(self.path),
+            "path": str(self.path) if self.path is not None else None,
             "resolution": self.resolution,
             "color_space": str(self.color_transform.color_space),
         }

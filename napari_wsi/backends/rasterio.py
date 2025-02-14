@@ -28,7 +28,8 @@ class RasterioStore(WSIStore):
             path: The path to the input image file.
         """
         with catch_warnings(category=NotGeoreferencedWarning, action="ignore"):
-            self._handle = rasterio.open(path)
+            path = UPath(path)
+            self._handle = rasterio.open(str(path))
             num_channels = self._handle.count
 
             factors_per_channel = [
@@ -59,6 +60,9 @@ class RasterioStore(WSIStore):
                 levels += PyramidLevel(factor=factor, shape=shape, chunks=chunks)
 
         super().__init__(path=path, levels=levels)
+
+    def __repr__(self) -> str:
+        return f"RasterioStore({self.name})"
 
     @property
     def spatial_transform(self) -> np.ndarray:

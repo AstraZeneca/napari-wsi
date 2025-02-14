@@ -91,6 +91,18 @@ viewer.scale_bar.visible = True
 viewer.scale_bar.colored = True
 ```
 
+```python
+from napari import Viewer
+from napari_wsi.backends.wsidicom import WSIDicomStore
+from requests.auth import HTTPBasicAuth
+from wsidicom import WsiDicomWebClient
+
+viewer = Viewer()
+client = WsiDicomWebClient.create_client("...", auth=HTTPBasicAuth("...", "..."))
+store = WSIDicomStore(client=client, study_uid="...", series_uids="...")
+store.to_viewer(viewer)
+```
+
 The sample images used above are part of the OpenSlide test data (see [Aperio]
 and [DICOM]).
 

@@ -21,7 +21,7 @@ try:
     from shapely import LineString as ShapelyPolyline
     from shapely import Point as ShapelyPoint
     from shapely import Polygon as ShapelyPolygon
-    from wsidicom import WsiDicom
+    from wsidicom import WsiDicom, WsiDicomWebClient
     from wsidicom.errors import WsiDicomNotFoundError
     from wsidicom.graphical_annotations import (
         Annotation,
@@ -197,15 +197,25 @@ class WSIDicomStore(WSIStore):
 
     def __init__(
         self,
-        path: str | Path | UPath,
+        path: str | Path | UPath | None = None,
+        *,
+        client: WsiDicomWebClient | None = None,
+        name: str | None = None,
         pyramid: int = 0,
         optical_path: str | None = None,
         color_space: str | ColorSpace = ColorSpace.RAW,
+        **kwargs,
     ) -> None:
         """Initialize a `WSIDicomStore`.
 
+        This requires either a `path` or a DICOMWeb `client`. All additional keyword
+        arguments are passed to `WsiDicom.open` or `WsiDicom.open_web`, respectively.
+
         Args:
-            path: The path to the input image directory, or a URL.
+            path: A path to the input image directory, or a URL.
+            client: A previously initialized DICOMWeb client. A `study_uid` and
+                `series_uids` must be provided as additional keyword arguments.
+            name: A name to identify the image.
             pyramid: An index to select one of multiple image pyramids.
             optical_path: An identifier to select one of multiple optical paths.
             color_space: The target color space.
@@ -213,7 +223,13 @@ class WSIDicomStore(WSIStore):
         if not isinstance(color_space, ColorSpace):
             color_space = ColorSpace(color_space)
 
-        self._handle = WsiDicom.open(path)
+        if path is not None and client is None:
+            path = UPath(path)
+            self._handle = WsiDicom.open(path, **kwargs)
+        elif client is not None and path is None:
+            self._handle = WsiDicom.open_web(client, **kwargs)
+        else:
+            raise ValueError("Need either 'path' or 'client'.")
         self._handle.set_selected_pyramid(pyramid)
 
         self._optical_path = _get_optical_path(self._handle.metadata, optical_path)
@@ -240,6 +256,9 @@ class WSIDicomStore(WSIStore):
         )
 
         super().__init__(path=path, levels=levels)
+
+    def __repr__(self) -> str:
+        return f"WSIDicomStore({self.name})"
 
     def _read_region(
         self, location: tuple[int, int], level: int, size: tuple[int, int]

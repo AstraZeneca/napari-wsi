@@ -40,6 +40,7 @@ class OpenSlideStore(WSIStore):
     def __init__(
         self,
         path: str | Path | UPath,
+        *,
         color_space: str | ColorSpace = ColorSpace.RAW,
     ) -> None:
         """Initialize an `OpenSlideStore`.
@@ -51,6 +52,7 @@ class OpenSlideStore(WSIStore):
         if not isinstance(color_space, ColorSpace):
             color_space = ColorSpace(color_space)
 
+        path = UPath(path)
         self._handle = OpenSlide(path)
 
         # We need to read some data to determine the number of channels and dtype.
@@ -74,6 +76,9 @@ class OpenSlideStore(WSIStore):
         )
 
         super().__init__(path=path, levels=levels)
+
+    def __repr__(self) -> str:
+        return f"OpenSlideStore({self.name})"
 
     @property
     def resolution(self) -> tuple[float, float] | None:

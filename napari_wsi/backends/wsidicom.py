@@ -21,7 +21,7 @@ try:
     from shapely import LineString as ShapelyPolyline
     from shapely import Point as ShapelyPoint
     from shapely import Polygon as ShapelyPolygon
-    from wsidicom import WsiDicom
+    from wsidicom import WsiDicom, WsiDicomWebClient
     from wsidicom.errors import WsiDicomNotFoundError
     from wsidicom.graphical_annotations import (
         Annotation,
@@ -197,20 +197,39 @@ class WSIDicomStore(WSIStore):
 
     def __init__(
         self,
-        path: str | Path | UPath,
+        path: str | Path | UPath | None = None,
+        *,
+        client: WsiDicomWebClient | None = None,
+        name: str | None = None,
         pyramid: int = 0,
         optical_path: str | None = None,
-        color_space: ColorSpace = ColorSpace.RAW,
+        color_space: str | ColorSpace = ColorSpace.RAW,
+        **kwargs,
     ) -> None:
         """Initialize a `WSIDicomStore`.
 
+        This requires either a `path` or a DICOMWeb `client`. All additional keyword
+        arguments are passed to `WsiDicom.open` or `WsiDicom.open_web`, respectively.
+
         Args:
-            path: The path to the input image directory, or a URL.
+            path: A path to the input image directory, or a URL.
+            client: A previously initialized DICOMWeb client. A `study_uid` and
+                `series_uids` must be provided as additional keyword arguments.
+            name: A name to identify the image.
             pyramid: An index to select one of multiple image pyramids.
             optical_path: An identifier to select one of multiple optical paths.
             color_space: The target color space.
         """
-        self._handle = WsiDicom.open(path)
+        if not isinstance(color_space, ColorSpace):
+            color_space = ColorSpace(color_space)
+
+        if path is not None and client is None:
+            path = UPath(path)
+            self._handle = WsiDicom.open(path, **kwargs)
+        elif client is not None and path is None:
+            self._handle = WsiDicom.open_web(client, **kwargs)
+        else:
+            raise ValueError("Need either 'path' or 'client'.")
         self._handle.set_selected_pyramid(pyramid)
 
         self._optical_path = _get_optical_path(self._handle.metadata, optical_path)
@@ -230,16 +249,16 @@ class WSIDicomStore(WSIStore):
                 chunks=(level.tile_size.height, level.tile_size.width),
             )
 
-        super().__init__(
-            path=path,
-            levels=levels,
-            resolution=(self._handle.mpp.height, self._handle.mpp.width),
-            color_transform=ColorTransform(
-                profile=self._optical_path.icc_profile,
-                mode=sample_image.mode,
-                color_space=color_space,
-            ),
+        self._color_transform = ColorTransform(
+            profile=self._optical_path.icc_profile,
+            mode=sample_image.mode,
+            color_space=color_space,
         )
+
+        super().__init__(path=path, levels=levels)
+
+    def __repr__(self) -> str:
+        return f"WSIDicomStore({self.name})"
 
     def _read_region(
         self, location: tuple[int, int], level: int, size: tuple[int, int]
@@ -250,6 +269,31 @@ class WSIDicomStore(WSIStore):
             size=size,
             path=self._optical_path.identifier,
         )
+
+    @property
+    def resolution(self) -> tuple[float, float]:
+        return (self._handle.mpp.height, self._handle.mpp.width)
+
+    @property
+    def units(self) -> str:
+        return "micrometer"
+
+    @property
+    def spatial_transform(self) -> np.ndarray:
+        matrix = np.identity(3)
+        ics = self._handle.metadata.image.image_coordinate_system
+        if ics is None:
+            return matrix
+        scale_y, scale_x = self.resolution  # mu/px
+        offset_y, offset_x = ics.origin.y * 1000, ics.origin.x * 1000  # mu
+        orientation = ics.orientation.values
+        matrix[0] = (orientation[1] * scale_y, orientation[4] * scale_x, offset_y)
+        matrix[1] = (orientation[0] * scale_y, orientation[3] * scale_x, offset_x)
+        return matrix
+
+    @property
+    def color_transform(self) -> ColorTransform:
+        return self._color_transform
 
     @cached_property
     def typed_metadata(self) -> WsiMetadata:
@@ -312,17 +356,30 @@ class WSIDicomStore(WSIStore):
     def to_layer_data_tuples(
         self,
         *,
-        rgb: bool = True,
         layer_type: str | tuple[str, ...] = "image",
         tol: float = 0.0,
         **kwargs,
     ) -> list["napari.types.LayerDataTuple"]:
+        """Convert to a napari layer data tuple.
+
+        All additional keword arguments are passed to the `to_layer_data_tuples` method
+        of the base class.
+
+        Args:
+            layer_type: The type of the layer data tuples to return. This can be one or
+                any subset of ("image", "shapes", "points").
+            tol: A tolerance value used to simplify all shape annotations. If this is
+                not greater zero, no simplification is performed.
+
+        Returns:
+            A list containing a napari layer data tuple of the given types.
+        """
         if isinstance(layer_type, str):
             layer_type = (layer_type,)
 
         items = []
         if "image" in layer_type:
-            items.extend(super().to_layer_data_tuples(rgb=rgb, **kwargs))
+            items.extend(super().to_layer_data_tuples(**kwargs))
         for annotations in self._handle.annotations:
             if annotations.coordinate_type != "image":
                 continue

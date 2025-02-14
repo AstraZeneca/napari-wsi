@@ -33,9 +33,9 @@ TEST_DATA_DCM = TEST_DATA_PATH / "CMU-1-Small-Region"
 class Case:
     id: str
     backend: WSIReaderBackend
-    multiscale: bool
-    rgb: bool
-    resolution: tuple[float, float] | None
+    expected_resolution: tuple[float, float] | None
+    expected_multiscale: bool = False
+    expected_rgb: bool = True
     target_color_space: ColorSpace = ColorSpace.RAW
     expected_color_space: ColorSpace = ColorSpace.RAW
     file_path: Path | None = None
@@ -57,17 +57,13 @@ DEFAULT_TEST_CASES = [
         id="svs-default",
         file_path=TEST_DATA_SVS,
         backend=WSIReaderBackend.OPENSLIDE,
-        resolution=(0.499, 0.499),
-        multiscale=False,
-        rgb=True,
+        expected_resolution=(0.499, 0.499),
     ),
     Case(
         id="svs-icc",
         file_path=TEST_DATA_SVS,
         backend=WSIReaderBackend.OPENSLIDE,
-        resolution=(0.499, 0.499),
-        multiscale=False,
-        rgb=True,
+        expected_resolution=(0.499, 0.499),
         # The test image does not actually have a color profile.
         target_color_space=ColorSpace.sRGB,
         expected_color_space=ColorSpace.RAW,
@@ -76,25 +72,21 @@ DEFAULT_TEST_CASES = [
         id="gtiff-default",
         file_path=TEST_DATA_GTIF,
         backend=WSIReaderBackend.RASTERIO,
-        resolution=None,
-        multiscale=False,
-        rgb=True,
+        expected_resolution=None,
     ),
     Case(
         id="gtiff-pyramid",
         file_fixture="dummy_gtiff",
         backend=WSIReaderBackend.RASTERIO,
-        resolution=None,
-        multiscale=True,
-        rgb=False,
+        expected_resolution=None,
+        expected_multiscale=True,
+        expected_rgb=False,
     ),
     Case(
         id="dcm-default",
         file_path=TEST_DATA_DCM,
         backend=WSIReaderBackend.WSIDICOM,
-        resolution=(0.499, 0.499),
-        multiscale=False,
-        rgb=True,
+        expected_resolution=(0.499, 0.499),
     ),
 ]
 

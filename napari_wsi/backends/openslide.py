@@ -34,21 +34,14 @@ def _get_chunks(handle: OpenSlide, level: int) -> tuple[int, int]:
     return (512, 512)
 
 
-def _get_resolution(handle: OpenSlide) -> tuple[float, float] | None:
-    with suppress(KeyError):
-        mpp_x = float(handle.properties[PROPERTY_NAME_MPP_X])
-        mpp_y = float(handle.properties[PROPERTY_NAME_MPP_Y])
-        return mpp_x, mpp_y
-    return None
-
-
 class OpenSlideStore(WSIStore):
     """A class for reading whole-slide images using the `openslide` backend."""
 
     def __init__(
         self,
         path: str | Path | UPath,
-        color_space: ColorSpace = ColorSpace.RAW,
+        *,
+        color_space: str | ColorSpace = ColorSpace.RAW,
     ) -> None:
         """Initialize an `OpenSlideStore`.
 
@@ -56,6 +49,10 @@ class OpenSlideStore(WSIStore):
             path: The path to the input image file.
             color_space: The target color space.
         """
+        if not isinstance(color_space, ColorSpace):
+            color_space = ColorSpace(color_space)
+
+        path = UPath(path)
         self._handle = OpenSlide(path)
 
         # We need to read some data to determine the number of channels and dtype.
@@ -72,16 +69,40 @@ class OpenSlideStore(WSIStore):
                 chunks=_get_chunks(self._handle, level=i),
             )
 
-        super().__init__(
-            path=path,
-            levels=levels,
-            resolution=_get_resolution(self._handle),
-            color_transform=ColorTransform(
-                profile=self._handle.color_profile,
-                mode=sample_image.mode,
-                color_space=color_space,
-            ),
+        self._color_transform = ColorTransform(
+            profile=self._handle.color_profile,
+            mode=sample_image.mode,
+            color_space=color_space,
         )
+
+        super().__init__(path=path, levels=levels)
+
+    def __repr__(self) -> str:
+        return f"OpenSlideStore({self.name})"
+
+    @property
+    def resolution(self) -> tuple[float, float] | None:
+        with suppress(KeyError):
+            mpp_x = float(self._handle.properties[PROPERTY_NAME_MPP_X])
+            mpp_y = float(self._handle.properties[PROPERTY_NAME_MPP_Y])
+            return mpp_y, mpp_x
+        return None
+
+    @property
+    def units(self) -> str:
+        return "micrometer"
+
+    @property
+    def spatial_transform(self) -> np.ndarray:
+        matrix = np.identity(3)
+        if self.resolution is None:
+            return matrix
+        matrix[[0, 1], [0, 1]] = self.resolution
+        return matrix
+
+    @property
+    def color_transform(self) -> ColorTransform:
+        return self._color_transform
 
     @cached_property
     def metadata(self) -> dict[str, JSON]:

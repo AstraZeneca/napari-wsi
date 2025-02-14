@@ -20,7 +20,7 @@ TEST_DATA_ANN = TEST_DATA_PATH / "annotations.json"
 
 
 class MockAnnotations:
-    def __init__(self, geometry_type: str):
+    def __init__(self, geometry_type: str) -> None:
         super().__init__()
         with open(TEST_DATA_ANN) as geojson_file:
             geojson_data = json.load(geojson_file)
@@ -49,26 +49,41 @@ class MockAnnotations:
         return [self._group]
 
 
-@pytest.mark.parametrize("geometry_type", ["Polygon", "LineString"])
-def test_shape_annotations(geometry_type: str, make_napari_viewer: Callable):
-    viewer = make_napari_viewer()
-    store = WSIDicomStore(TEST_DATA_DCM)
-    with patch.object(store._handle, "_annotations", [MockAnnotations(geometry_type)]):
-        layers = store.to_viewer(viewer, layer_type=("image", "shapes"))
+@pytest.mark.parametrize("spatial_transform", [True, False], ids=["pixel", "slide"])
+class TestAnnotations:
+    @pytest.mark.parametrize("geometry_type", ["Polygon", "LineString"])
+    def test_shape_annotations(
+        self, geometry_type: str, spatial_transform: bool, make_napari_viewer: Callable
+    ):
+        viewer = make_napari_viewer()
+        store = WSIDicomStore(TEST_DATA_DCM)
+        with patch.object(
+            store._handle, "_annotations", [MockAnnotations(geometry_type)]
+        ):
+            layers = store.to_viewer(
+                viewer,
+                layer_type=("image", "shapes"),
+                spatial_transform=spatial_transform,
+            )
         assert len(layers) == 2
         assert isinstance(layers[0], Image)
         assert isinstance(layers[1], Shapes)
         shapes = layers[1]
         assert len(shapes.data) > 0
 
-
-def test_point_annotations(make_napari_viewer: Callable):
-    viewer = make_napari_viewer()
-    store = WSIDicomStore(TEST_DATA_DCM)
-    with patch.object(store._handle, "_annotations", [MockAnnotations("Point")]):
-        layers = store.to_viewer(viewer, layer_type=("image", "points"))
+    def test_point_annotations(
+        self, spatial_transform: bool, make_napari_viewer: Callable
+    ):
+        viewer = make_napari_viewer()
+        store = WSIDicomStore(TEST_DATA_DCM)
+        with patch.object(store._handle, "_annotations", [MockAnnotations("Point")]):
+            layers = store.to_viewer(
+                viewer,
+                layer_type=("image", "points"),
+                spatial_transform=spatial_transform,
+            )
         assert len(layers) == 2
         assert isinstance(layers[0], Image)
         assert isinstance(layers[1], Points)
-        shapes = layers[1]
-        assert len(shapes.data) > 0
+        points = layers[1]
+        assert len(points.data) > 0

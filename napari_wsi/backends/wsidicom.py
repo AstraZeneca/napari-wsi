@@ -79,7 +79,8 @@ def _validate_annotation(
 ) -> AnnotationData | None:
     coords = np.array(annotation.geometry.to_coords())[:, ::-1]
 
-    # We need check for invalid geometries to avoid errors on layer creation.
+    # We expect DICOM annotations to be valid geometries without
+    # holes, but let's check to avoid errors on layer creation.
     if isinstance(annotation.geometry, Polygon):
         shape = ShapelyPolygon(coords)
     elif isinstance(annotation.geometry, Polyline):
@@ -89,6 +90,8 @@ def _validate_annotation(
     else:
         raise ValueError("Unsupported geometry type.")
     if not shape.is_valid:
+        return None
+    if len(getattr(shape, "interiors", [])) > 0:
         return None
     if tol > 0:
         shape = shape.simplify(tol)

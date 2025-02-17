@@ -204,7 +204,6 @@ class WSIDicomStore(WSIStore):
         path: str | Path | UPath | None = None,
         *,
         client: WsiDicomWebClient | None = None,
-        name: str | None = None,
         pyramid: int = 0,
         optical_path: str | None = None,
         color_space: str | ColorSpace = ColorSpace.RAW,
@@ -219,7 +218,6 @@ class WSIDicomStore(WSIStore):
             path: A path to the input image directory, or a URL.
             client: A previously initialized DICOMWeb client. A `study_uid` and
                 `series_uids` must be provided as additional keyword arguments.
-            name: A name to identify the image.
             pyramid: An index to select one of multiple image pyramids.
             optical_path: An identifier to select one of multiple optical paths.
             color_space: The target color space.

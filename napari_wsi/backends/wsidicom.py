@@ -21,6 +21,7 @@ try:
     from shapely import LineString as ShapelyPolyline
     from shapely import Point as ShapelyPoint
     from shapely import Polygon as ShapelyPolygon
+    from shapely.geometry.base import BaseGeometry as ShapelyGeometry
     from wsidicom import WsiDicom, WsiDicomWebClient
     from wsidicom.errors import WsiDicomNotFoundError
     from wsidicom.graphical_annotations import (
@@ -82,7 +83,7 @@ def _validate_annotation(
     # We expect DICOM annotations to be valid geometries without
     # holes, but let's check to avoid errors on layer creation.
     if isinstance(annotation.geometry, Polygon):
-        shape = ShapelyPolygon(coords)
+        shape: ShapelyGeometry = ShapelyPolygon(coords)
     elif isinstance(annotation.geometry, Polyline):
         shape = ShapelyPolyline(coords)
     elif isinstance(annotation.geometry, Point):

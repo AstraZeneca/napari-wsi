@@ -191,7 +191,11 @@ class WSIStore(PyramidStore, ABC):
         return items
 
     def to_viewer(
-        self, viewer: "napari.viewer.Viewer", spatial_transform: bool = False, **kwargs
+        self,
+        viewer: "napari.viewer.Viewer",
+        *,
+        spatial_transform: bool = False,
+        **kwargs,
     ) -> list["napari.layers.Layer"]:
         """Add all available layer data to the napari viewer.
 

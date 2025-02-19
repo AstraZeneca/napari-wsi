@@ -19,7 +19,6 @@ try:
     import pandas as pd
     from colorspacious import cspace_converter
     from shapely import LineString as ShapelyPolyline
-    from shapely import Point as ShapelyPoint
     from shapely import Polygon as ShapelyPolygon
     from shapely.geometry.base import BaseGeometry as ShapelyGeometry
     from wsidicom import WsiDicom, WsiDicomWebClient
@@ -82,12 +81,15 @@ def _validate_annotation(
 
     # We expect DICOM annotations to be valid geometries without
     # holes, but let's check to avoid errors on layer creation.
-    if isinstance(annotation.geometry, Polygon):
+    if isinstance(annotation.geometry, Point):
+        assert len(coords) == 1
+        return AnnotationData(coords[0], shape_type="point")
+    elif isinstance(annotation.geometry, Polygon):
         shape: ShapelyGeometry = ShapelyPolygon(coords)
+        shape_type: Literal["polygon", "path"] = "polygon"
     elif isinstance(annotation.geometry, Polyline):
         shape = ShapelyPolyline(coords)
-    elif isinstance(annotation.geometry, Point):
-        shape = ShapelyPoint(coords)
+        shape_type = "path"
     else:
         raise ValueError("Unsupported geometry type.")
     if not shape.is_valid:
@@ -96,13 +98,7 @@ def _validate_annotation(
         return None
     if tol > 0:
         shape = shape.simplify(tol)
-
-    if isinstance(shape, ShapelyPolygon):
-        return AnnotationData(np.array(shape.exterior.coords), shape_type="polygon")
-    elif isinstance(shape, ShapelyPolyline):
-        return AnnotationData(np.array(shape.coords), shape_type="path")
-    assert isinstance(shape, ShapelyPoint)
-    return AnnotationData(np.array(shape.coords[0]), shape_type="point")
+    return AnnotationData(coords, shape_type=shape_type)
 
 
 def _get_shape_annotations(

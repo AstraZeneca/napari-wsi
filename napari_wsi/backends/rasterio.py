@@ -26,6 +26,7 @@ class RasterioStore(WSIStore):
 
         Args:
             path: The path to the input image file.
+
         """
         with catch_warnings(category=NotGeoreferencedWarning, action="ignore"):
             path = UPath(path)

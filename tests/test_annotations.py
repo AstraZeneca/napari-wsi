@@ -22,7 +22,7 @@ TEST_DATA_ANN = TEST_DATA_PATH / "annotations.json"
 class MockAnnotations:
     def __init__(self, geometry_type: str) -> None:
         super().__init__()
-        with open(TEST_DATA_ANN) as geojson_file:
+        with TEST_DATA_ANN.open("r") as geojson_file:
             geojson_data = json.load(geojson_file)
             features = geojson_data["features"]
             self._group = AnnotationGroup.from_geometries(
@@ -54,7 +54,7 @@ class TestAnnotations:
     @pytest.mark.parametrize("geometry_type", ["Polygon", "LineString"])
     def test_shape_annotations(
         self, geometry_type: str, spatial_transform: bool, make_napari_viewer: Callable
-    ):
+    ) -> None:
         viewer = make_napari_viewer()
         store = WSIDicomStore(TEST_DATA_DCM)
         with patch.object(
@@ -73,7 +73,7 @@ class TestAnnotations:
 
     def test_point_annotations(
         self, spatial_transform: bool, make_napari_viewer: Callable
-    ):
+    ) -> None:
         viewer = make_napari_viewer()
         store = WSIDicomStore(TEST_DATA_DCM)
         with patch.object(store._handle, "_annotations", [MockAnnotations("Point")]):

@@ -10,9 +10,9 @@ import dask.array as da
 import numpy as np
 import zarr
 from numpy.typing import DTypeLike
+from typing_extensions import Self
 from upath import UPath
 from zarr.abc.metadata import Metadata
-from zarr.core.array import Array
 from zarr.core.common import JSON
 from zarr.storage import MemoryStore
 
@@ -21,6 +21,7 @@ from .color_transform import ColorSpace, ColorTransform
 
 if TYPE_CHECKING:
     import napari
+    from zarr.core.array import Array
 
 
 @dataclass(frozen=True)
@@ -49,7 +50,7 @@ class PyramidLevels:
     def __iter__(self) -> Iterator[PyramidLevel]:
         yield from self._levels
 
-    def __iadd__(self, level: PyramidLevel) -> "PyramidLevels":
+    def __iadd__(self, level: PyramidLevel) -> Self:
         if len(self._levels) > 0:
             top_level = self._levels[-1]
             if level.factor <= top_level.factor:
@@ -110,9 +111,11 @@ class PyramidStore(MemoryStore, ABC):
         Args:
             rgb: If `False`, the image data will be converted to channels-first format.
                 If `True`, 3- and 4-channel data will be left in channels-last format.
+            kwargs: All additional keyword arguments are used as layer parameters.
 
         Returns:
             A one-element list containing a napari layer data tuple of type `image`.
+
         """
         pyramid_data: list[da.Array] = []
         for _, array in self._pyramid:
@@ -133,14 +136,14 @@ class PyramidStore(MemoryStore, ABC):
                     **kwargs,
                 },
                 "image",
-            )
+            ),
         ]
 
 
 class WSIStore(PyramidStore, ABC):
     """A base class for reading multi-scale whole-slide images."""
 
-    def __init__(self, path: UPath | None, levels: PyramidLevels):
+    def __init__(self, path: UPath | None, levels: PyramidLevels) -> None:
         self._path = path
         super().__init__(name=path.stem if path is not None else "Image", levels=levels)
 
@@ -199,15 +202,16 @@ class WSIStore(PyramidStore, ABC):
     ) -> list["napari.layers.Layer"]:
         """Add all available layer data to the napari viewer.
 
-        All additional keword arguments are passed to the `to_layer_data_tuples` method.
-
         Args:
             viewer: The napari viewer.
             spatial_transform: If `True` and a spatial transform is available, all
                 layers are display in the corresponding transfored coordinate system.
+            kwargs: All additional keword arguments are passed to the
+                `to_layer_data_tuples` method.
 
         Returns:
             A list of layers added to the viewer.
+
         """
         layers = []
         for item in (

@@ -7,7 +7,6 @@ import skimage.data
 import skimage.transform
 import skimage.util
 from attr import dataclass
-from pytest import FixtureRequest, TempPathFactory
 from rasterio.enums import Resampling
 from rasterio.errors import NotGeoreferencedWarning
 
@@ -41,14 +40,15 @@ class Case:
     file_path: Path | None = None
     file_fixture: str | None = None
 
-    def path(self, request: FixtureRequest) -> Path:
+    def path(self, request: pytest.FixtureRequest) -> Path:
         if self.file_path is not None:
             path = self.file_path
         elif self.file_fixture is not None:
             path = request.getfixturevalue(self.file_fixture)
         else:
             raise ValueError("Need either 'file_path' or 'file_fixture'.")
-        assert isinstance(path, Path) and path.exists()
+        assert isinstance(path, Path)
+        assert path.exists()
         return path.resolve()
 
 
@@ -92,7 +92,7 @@ DEFAULT_TEST_CASES = [
 
 
 @pytest.fixture(scope="session")
-def dummy_gtiff(tmp_path_factory: TempPathFactory) -> Path:
+def dummy_gtiff(tmp_path_factory: pytest.TempPathFactory) -> Path:
     path = tmp_path_factory.mktemp("data") / "image.tiff"
 
     data = skimage.util.img_as_ubyte(skimage.data.binary_blobs(2048))

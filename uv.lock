@@ -1163,6 +1163,7 @@ dependencies = [
     { name = "magicgui" },
     { name = "numpy" },
     { name = "pillow" },
+    { name = "typing-extensions" },
     { name = "universal-pathlib" },
     { name = "zarr" },
 ]
@@ -1217,6 +1218,7 @@ requires-dist = [
     { name = "pillow", specifier = ">=11.1" },
     { name = "rasterio", marker = "extra == 'rasterio'", specifier = ">=1.4" },
     { name = "shapely", marker = "extra == 'wsidicom'", specifier = ">=2.0" },
+    { name = "typing-extensions", specifier = ">=4.6.1" },
     { name = "universal-pathlib", specifier = ">=0.2" },
     { name = "wsidicom", marker = "extra == 'wsidicom'", specifier = ">=0.22" },
     { name = "zarr", specifier = ">=3.0" },
@@ -1883,6 +1885,7 @@ name = "pyqt5-qt5"
 version = "5.15.16"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
+    { url = "https://files.pythonhosted.org/packages/2f/97/ef77663fb5d61b65f2e93edc135cc0b86724c1fc610c10a6867ae0c0baff/PyQt5_Qt5-5.15.16-1-py3-none-manylinux2014_x86_64.whl", hash = "sha256:2cfa8f50dd29618ef98f29355f83d8a5f3e41003be22128e9b5d94d214b6b468", size = 61080044 },
     { url = "https://files.pythonhosted.org/packages/ff/89/65a4b9c6bc89012182ff46bf8e503a8aa5e5570df7cb628211c93012beca/PyQt5_Qt5-5.15.16-py3-none-macosx_10_13_x86_64.whl", hash = "sha256:18b6fec012de60921fcb131cf2a21368171dc29050d43e4b81a64be407a36105", size = 39957063 },
     { url = "https://files.pythonhosted.org/packages/0a/60/b6db285c87666b02aa11d0946d7bb381d8bdcc815cc5aa61fa91272b321b/PyQt5_Qt5-5.15.16-py3-none-macosx_11_0_arm64.whl", hash = "sha256:e1a0e7ae35a7615c74a293705204579650930486a89af23082462f429dae504a", size = 37122434 },
     { url = "https://files.pythonhosted.org/packages/dc/1a/c4f861c4d7a9844a207b8bc3aa9dd84c51f823784d405469cde83d736cf1/PyQt5_Qt5-5.15.16-py3-none-manylinux2014_x86_64.whl", hash = "sha256:5ee1754a6460849cba76c0f0c490c0ccc3b514abc780b141cf772db22b76b54b", size = 59854452 },

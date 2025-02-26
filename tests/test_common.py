@@ -8,9 +8,8 @@ from napari_wsi.common import PyramidLevel, PyramidLevels
 class TestPyramid:
     def test_pyramid_construction(
         self, dtype: DTypeLike = np.uint8, chunks: tuple[int, int] = (32, 32)
-    ):
+    ) -> None:
         """Test some consistency checks in `PyramidLevels`."""
-
         with pytest.raises(ValueError, match="channels"):
             PyramidLevels(num_channels=0, dtype=dtype)
 

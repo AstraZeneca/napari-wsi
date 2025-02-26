@@ -19,7 +19,6 @@ try:
     import pandas as pd
     from colorspacious import cspace_converter
     from shapely import LineString as ShapelyPolyline
-    from shapely import Point as ShapelyPoint
     from shapely import Polygon as ShapelyPolygon
     from wsidicom import WsiDicom, WsiDicomWebClient
     from wsidicom.errors import WsiDicomNotFoundError
@@ -41,6 +40,7 @@ from ..common import PyramidLevel, PyramidLevels, WSIStore
 
 if TYPE_CHECKING:
     import napari
+    from shapely.geometry.base import BaseGeometry as ShapelyGeometry
 
 
 @dataclass(frozen=True)
@@ -79,26 +79,26 @@ def _validate_annotation(
 ) -> AnnotationData | None:
     coords = np.array(annotation.geometry.to_coords())[:, ::-1]
 
-    # We need check for invalid geometries to avoid errors on layer creation.
+    # We expect DICOM annotations to be valid geometries without
+    # holes, but let's check to avoid errors on layer creation.
+    if isinstance(annotation.geometry, Point):
+        assert len(coords) == 1
+        return AnnotationData(coords[0], shape_type="point")
     if isinstance(annotation.geometry, Polygon):
-        shape = ShapelyPolygon(coords)
+        shape: ShapelyGeometry = ShapelyPolygon(coords)
+        shape_type: Literal["polygon", "path"] = "polygon"
     elif isinstance(annotation.geometry, Polyline):
         shape = ShapelyPolyline(coords)
-    elif isinstance(annotation.geometry, Point):
-        shape = ShapelyPoint(coords)
+        shape_type = "path"
     else:
-        raise ValueError("Unsupported geometry type.")
+        raise TypeError("Unsupported geometry type.")
     if not shape.is_valid:
+        return None
+    if len(getattr(shape, "interiors", [])) > 0:
         return None
     if tol > 0:
         shape = shape.simplify(tol)
-
-    if isinstance(shape, ShapelyPolygon):
-        return AnnotationData(np.array(shape.exterior.coords), shape_type="polygon")
-    elif isinstance(shape, ShapelyPolyline):
-        return AnnotationData(np.array(shape.coords), shape_type="path")
-    assert isinstance(shape, ShapelyPoint)
-    return AnnotationData(np.array(shape.coords[0]), shape_type="point")
+    return AnnotationData(coords, shape_type=shape_type)
 
 
 def _get_shape_annotations(
@@ -200,7 +200,6 @@ class WSIDicomStore(WSIStore):
         path: str | Path | UPath | None = None,
         *,
         client: WsiDicomWebClient | None = None,
-        name: str | None = None,
         pyramid: int = 0,
         optical_path: str | None = None,
         color_space: str | ColorSpace = ColorSpace.RAW,
@@ -215,10 +214,12 @@ class WSIDicomStore(WSIStore):
             path: A path to the input image directory, or a URL.
             client: A previously initialized DICOMWeb client. A `study_uid` and
                 `series_uids` must be provided as additional keyword arguments.
-            name: A name to identify the image.
             pyramid: An index to select one of multiple image pyramids.
             optical_path: An identifier to select one of multiple optical paths.
             color_space: The target color space.
+            kwargs: All additional keyword arguments are passed to the `WsiDicom.open`
+                or `WsiDicom.open_web` method.
+
         """
         if not isinstance(color_space, ColorSpace):
             color_space = ColorSpace(color_space)
@@ -286,7 +287,7 @@ class WSIDicomStore(WSIStore):
             return matrix
         scale_y, scale_x = self.resolution  # mu/px
         offset_y, offset_x = ics.origin.y * 1000, ics.origin.x * 1000  # mu
-        orientation = ics.orientation.values
+        orientation = ics.orientation.values  # noqa: PD011
         matrix[0] = (orientation[1] * scale_y, orientation[4] * scale_x, offset_y)
         matrix[1] = (orientation[0] * scale_y, orientation[3] * scale_x, offset_x)
         return matrix
@@ -370,9 +371,12 @@ class WSIDicomStore(WSIStore):
                 any subset of ("image", "shapes", "points").
             tol: A tolerance value used to simplify all shape annotations. If this is
                 not greater zero, no simplification is performed.
+            kwargs: All additional keword arguments are passed to the
+                `to_layer_data_tuples` method of the base class.
 
         Returns:
             A list containing a napari layer data tuple of the given types.
+
         """
         if isinstance(layer_type, str):
             layer_type = (layer_type,)

@@ -48,6 +48,7 @@ class OpenSlideStore(WSIStore):
         Args:
             path: The path to the input image file.
             color_space: The target color space.
+
         """
         if not isinstance(color_space, ColorSpace):
             color_space = ColorSpace(color_space)

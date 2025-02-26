@@ -1156,13 +1156,14 @@ wheels = [
 
 [[package]]
 name = "napari-wsi"
-version = "1.2.0"
+version = "1.2.1"
 source = { editable = "." }
 dependencies = [
     { name = "dask" },
     { name = "magicgui" },
     { name = "numpy" },
     { name = "pillow" },
+    { name = "typing-extensions" },
     { name = "universal-pathlib" },
     { name = "zarr" },
 ]
@@ -1202,6 +1203,7 @@ dev = [
     { name = "pytest-qt" },
     { name = "ruff" },
     { name = "scikit-image" },
+    { name = "types-shapely" },
 ]
 
 [package.metadata]
@@ -1216,6 +1218,7 @@ requires-dist = [
     { name = "pillow", specifier = ">=11.1" },
     { name = "rasterio", marker = "extra == 'rasterio'", specifier = ">=1.4" },
     { name = "shapely", marker = "extra == 'wsidicom'", specifier = ">=2.0" },
+    { name = "typing-extensions", specifier = ">=4.6.1" },
     { name = "universal-pathlib", specifier = ">=0.2" },
     { name = "wsidicom", marker = "extra == 'wsidicom'", specifier = ">=0.22" },
     { name = "zarr", specifier = ">=3.0" },
@@ -1234,6 +1237,7 @@ dev = [
     { name = "pytest-qt", specifier = ">=4.4" },
     { name = "ruff", specifier = ">=0.9" },
     { name = "scikit-image", specifier = ">=0.25" },
+    { name = "types-shapely", specifier = ">=2.0.0" },
 ]
 
 [[package]]
@@ -1881,6 +1885,7 @@ name = "pyqt5-qt5"
 version = "5.15.16"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
+    { url = "https://files.pythonhosted.org/packages/2f/97/ef77663fb5d61b65f2e93edc135cc0b86724c1fc610c10a6867ae0c0baff/PyQt5_Qt5-5.15.16-1-py3-none-manylinux2014_x86_64.whl", hash = "sha256:2cfa8f50dd29618ef98f29355f83d8a5f3e41003be22128e9b5d94d214b6b468", size = 61080044 },
     { url = "https://files.pythonhosted.org/packages/ff/89/65a4b9c6bc89012182ff46bf8e503a8aa5e5570df7cb628211c93012beca/PyQt5_Qt5-5.15.16-py3-none-macosx_10_13_x86_64.whl", hash = "sha256:18b6fec012de60921fcb131cf2a21368171dc29050d43e4b81a64be407a36105", size = 39957063 },
     { url = "https://files.pythonhosted.org/packages/0a/60/b6db285c87666b02aa11d0946d7bb381d8bdcc815cc5aa61fa91272b321b/PyQt5_Qt5-5.15.16-py3-none-macosx_11_0_arm64.whl", hash = "sha256:e1a0e7ae35a7615c74a293705204579650930486a89af23082462f429dae504a", size = 37122434 },
     { url = "https://files.pythonhosted.org/packages/dc/1a/c4f861c4d7a9844a207b8bc3aa9dd84c51f823784d405469cde83d736cf1/PyQt5_Qt5-5.15.16-py3-none-manylinux2014_x86_64.whl", hash = "sha256:5ee1754a6460849cba76c0f0c490c0ccc3b514abc780b141cf772db22b76b54b", size = 59854452 },
@@ -2688,6 +2693,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/b3/d2/2190c54d53c04491ad72a1df019c5dfa692e6ab6c2dba1be7b6c9d530e30/types_pytz-2025.1.0.20250204.tar.gz", hash = "sha256:00f750132769f1c65a4f7240bc84f13985b4da774bd17dfbe5d9cd442746bd49", size = 10352 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/be/50/65ffad73746f1d8b15992c030e0fd22965fd5ae2c0206dc28873343b3230/types_pytz-2025.1.0.20250204-py3-none-any.whl", hash = "sha256:32ca4a35430e8b94f6603b35beb7f56c32260ddddd4f4bb305fdf8f92358b87e", size = 10059 },
+]
+
+[[package]]
+name = "types-shapely"
+version = "2.0.0.20250202"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/74/63/55275685174cc9facf047bfe96e4003d456801fdb8be3c788099703fc75a/types_shapely-2.0.0.20250202.tar.gz", hash = "sha256:97d547ca421cd01c59b20e73f501b92867d76cb40d626fa5851ac66d93720821", size = 25032 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/92/fa/80c289045de65e6867d0a2dda9680b688f144e7e0351bedf9788e29b1f59/types_shapely-2.0.0.20250202-py3-none-any.whl", hash = "sha256:ae550eb03bfc9c4e431b30c494c7a4c3c84926d10887e641eff05bb0bde3dee6", size = 36371 },
 ]
 
 [[package]]

@@ -3,7 +3,6 @@ from collections.abc import Callable
 import numpy as np
 import pytest
 from napari.layers import Image
-from pytest import FixtureRequest
 
 from napari_wsi.widget import WSIReaderWidget
 
@@ -13,10 +12,9 @@ from .conftest import DEFAULT_TEST_CASES, Case
 class TestWSIReaderWidget:
     @pytest.mark.parametrize("case", DEFAULT_TEST_CASES, ids=lambda case: case.id)
     def test_read_file(
-        self, case: Case, request: FixtureRequest, make_napari_viewer: Callable
-    ):
+        self, case: Case, request: pytest.FixtureRequest, make_napari_viewer: Callable
+    ) -> None:
         """Test that the reader widget works for the given sample data."""
-
         viewer = make_napari_viewer()
         path = case.path(request)
 

@@ -2,7 +2,6 @@ from collections.abc import Callable
 
 import pytest
 from napari.layers import Image
-from pytest import FixtureRequest
 
 from napari_wsi.common import open_store
 
@@ -16,11 +15,10 @@ class TestBackends:
         self,
         case: Case,
         spatial_transform: bool,
-        request: FixtureRequest,
+        request: pytest.FixtureRequest,
         make_napari_viewer: Callable,
-    ):
+    ) -> None:
         """Test that the backend classes work for the given sample data."""
-
         viewer = make_napari_viewer()
         path = case.path(request)
 

@@ -16,7 +16,7 @@ from PIL.ImageCms import (
 
 class ColorSpace(StrEnum):
     RAW = "RAW"
-    sRGB = "sRGB"
+    sRGB = "sRGB"  # noqa: N815
 
 
 class ColorTransform:
@@ -34,6 +34,7 @@ class ColorTransform:
             profile: The input ICC profile.
             mode: The image mode, specifying the pixel format (usually 'RGB' or 'RGBA').
             color_space: The target color space.
+
         """
         self._transform = None
         self._color_space = color_space
@@ -42,7 +43,7 @@ class ColorTransform:
                 profile = getOpenProfile(BytesIO(profile))
             self._transform = buildTransform(
                 profile,
-                createProfile(str(color_space)),  # type: ignore
+                createProfile(str(color_space)),  # type: ignore[arg-type]
                 mode,
                 mode,
                 Intent(getDefaultIntent(profile)),

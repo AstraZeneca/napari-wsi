@@ -26,6 +26,7 @@ class RasterioStore(WSIStore):
 
         Args:
             path: The path to the input image file.
+
         """
         with catch_warnings(category=NotGeoreferencedWarning, action="ignore"):
             path = UPath(path)
@@ -66,13 +67,14 @@ class RasterioStore(WSIStore):
 
     @property
     def spatial_transform(self) -> np.ndarray:
-        matrix = np.identity(3)
-        if self._handle.transform is None:
-            return matrix
         transform = self._handle.transform
-        matrix[0] = (transform.e, transform.d, transform.f)
-        matrix[1] = (transform.b, transform.a, transform.c)
-        return matrix
+        return np.array(
+            [
+                [transform.e, transform.d, transform.f],
+                [transform.b, transform.a, transform.c],
+                [0.0, 0.0, 1.0],
+            ]
+        )
 
     @cached_property
     def metadata(self) -> dict[str, JSON]:

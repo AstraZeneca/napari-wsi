@@ -4,7 +4,6 @@ from warnings import catch_warnings
 import pytest
 import rasterio
 import skimage.data
-import skimage.transform
 import skimage.util
 from attr import dataclass
 from rasterio.enums import Resampling

@@ -66,6 +66,7 @@ dev = [
     "ruff>=0.9",
     "scikit-image>=0.25",
     "types-shapely>=2.0.0",
+    "types-tqdm>=4.67.0",
 ]
 
 [project.urls]
@@ -109,6 +110,7 @@ ignore = [
     "EM101", # Exception must not use a string literal
     "EM102", # Exception must not use an f-string literal
     "FBT001", # Boolean-typed positional argument in function definition
+    "PLC0415", # `import` should be at the top-level of a file
     "S101", # Use of `assert`
     "TID252", # Prefer absolute imports over relative imports from parent modules
     "TRY003", # Avoid specifying long messages outside the exception class

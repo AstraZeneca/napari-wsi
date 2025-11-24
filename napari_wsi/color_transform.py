@@ -1,4 +1,5 @@
 from enum import StrEnum
+from importlib.resources import files
 from io import BytesIO
 
 from PIL.Image import Image
@@ -13,10 +14,21 @@ from PIL.ImageCms import (
     getOpenProfile,
 )
 
+from . import data as napari_wsi_data
+
 
 class ColorSpace(StrEnum):
     RAW = "RAW"
     sRGB = "sRGB"  # noqa: N815
+    sRGB_V4_PREFERENCE = "sRGB_V4_PREFERENCE"  # noqa: N815
+    sRGB_V4_APPEARANCE = "sRGB_V4_APPEARANCE"  # noqa: N815
+    sRGB_V2 = "sRGB_V2"  # noqa: N815
+    DISPLAY_P3 = "DISPLAY_P3"
+
+
+def _get_profile(name: str) -> ImageCmsProfile:
+    path = files(napari_wsi_data).joinpath(f"{name}.icc")
+    return getOpenProfile(path.open("rb"))
 
 
 class ColorTransform:
@@ -41,9 +53,25 @@ class ColorTransform:
         if profile is not None and color_space != ColorSpace.RAW:
             if not isinstance(profile, ImageCmsProfile):
                 profile = getOpenProfile(BytesIO(profile))
+            if color_space == ColorSpace.sRGB:
+                target_profile = getOpenProfile(createProfile("sRGB"))
+            elif color_space == ColorSpace.sRGB_V4_PREFERENCE:
+                # https://www.color.org/srgbprofiles.xalter
+                target_profile = _get_profile("sRGB_v4_ICC_preference")
+            elif color_space == ColorSpace.sRGB_V4_APPEARANCE:
+                # https://www.color.org/profiles/srgb_appearance.xalter
+                target_profile = _get_profile("sRGB_ICC_v4_Appearance")
+            elif color_space == ColorSpace.sRGB_V2:
+                # https://www.color.org/srgbprofiles.xalter
+                target_profile = _get_profile("sRGB2014")
+            elif color_space == ColorSpace.DISPLAY_P3:
+                # https://www.color.org/chardata/rgb/DisplayP3.xalter
+                target_profile = _get_profile("Display P3")
+            else:
+                raise ValueError("Invalid color space.")
             self._transform = buildTransform(
                 profile,
-                createProfile(str(color_space)),  # type: ignore[arg-type]
+                target_profile,
                 mode,
                 mode,
                 Intent(getDefaultIntent(profile)),

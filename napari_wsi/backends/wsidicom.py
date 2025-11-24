@@ -13,6 +13,7 @@ from PIL.Image import Image
 from upath import UPath
 from zarr.abc.store import ByteRequest
 from zarr.core.buffer import Buffer, BufferPrototype
+from zarr.core.buffer.core import default_buffer_prototype
 from zarr.core.common import JSON
 
 try:
@@ -176,10 +177,24 @@ def _get_point_annotations(
             )
 
 
-def _get_optical_path(
-    metadata: WsiMetadata, identifier: str | None = None
-) -> OpticalPath:
-    optical_paths = metadata.optical_paths
+def _get_metadata(handle: WsiDicom, key: str) -> Any:  # noqa: ANN401
+    try:
+        # wsidicom>=0.28 # noqa: ERA001
+        # https://github.com/imi-bigpicture/wsidicom/commit/f7cfb195eb731fa1be17703d77ad2ea1f3ddfffd
+        return getattr(handle.metadata.pyramid, key)
+    except AttributeError:
+        pass
+    try:
+        # wsidicom>=0.22,<0.28
+        return getattr(handle.metadata, key)
+    except AttributeError:
+        pass
+    raise AttributeError(f"Failed to look up metadata '{key}'.")
+
+
+def _get_optical_path(handle: WsiDicom, identifier: str | None = None) -> OpticalPath:
+    optical_paths = _get_metadata(handle, "optical_paths")
+
     if len(optical_paths) == 0:
         raise ValueError("No optical paths in metadata.")
 
@@ -233,7 +248,7 @@ class WSIDicomStore(WSIStore):
             raise ValueError("Need either 'path' or 'client'.")
         self._handle.set_selected_pyramid(pyramid)
 
-        self._optical_path = _get_optical_path(self._handle.metadata, optical_path)
+        self._optical_path = _get_optical_path(self._handle, optical_path)
 
         # We need to read some data to determine the number of channels and dtype.
         sample_image = self._read_region(location=(0, 0), level=0, size=(1, 1))
@@ -282,7 +297,7 @@ class WSIDicomStore(WSIStore):
     @property
     def spatial_transform(self) -> np.ndarray:
         matrix = np.identity(3)
-        ics = self._handle.metadata.image.image_coordinate_system
+        ics = _get_metadata(self._handle, "image").image_coordinate_system
         if ics is None:
             return matrix
         scale_y, scale_x = self.resolution  # mu/px
@@ -320,10 +335,13 @@ class WSIDicomStore(WSIStore):
     async def get(
         self,
         key: str,
-        prototype: BufferPrototype,
+        prototype: BufferPrototype | None = None,
         byte_range: ByteRequest | None = None,
     ) -> Buffer | None:
         assert self._is_open
+        assert isinstance(key, str)
+        if prototype is None:
+            prototype = default_buffer_prototype()
         assert byte_range is None
         if (match := self._parse_key(key)) is not None:
             i, u, v = match

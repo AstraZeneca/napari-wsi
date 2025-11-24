@@ -6,6 +6,7 @@ import numpy as np
 from upath import UPath
 from zarr.abc.store import ByteRequest
 from zarr.core.buffer import Buffer, BufferPrototype
+from zarr.core.buffer.core import default_buffer_prototype
 from zarr.core.common import JSON
 
 try:
@@ -84,10 +85,12 @@ class RasterioStore(WSIStore):
     async def get(
         self,
         key: str,
-        prototype: BufferPrototype,
+        prototype: BufferPrototype | None = None,
         byte_range: ByteRequest | None = None,
     ) -> Buffer | None:
         assert self._is_open
+        if prototype is None:
+            prototype = default_buffer_prototype()
         assert byte_range is None
         if (match := self._parse_key(key)) is not None:
             i, u, v = match
